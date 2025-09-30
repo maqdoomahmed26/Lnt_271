@@ -1,0 +1,14 @@
+{% extends 'supportbase.html' %}
+{% block content %}
+<h2 style="margin-top: 0px;background-color: rgba(231, 229, 110, 0.918);">App Setting</h2>
+        <div style="padding: 0px 20px 20px 20px;">
+            <form method="POST">
+                {% csrf_token %}
+                <div>
+                    {{ form.as_p }}
+                </div>
+                <button type="submit">Save Path</button>
+            </form>
+            <p>Current file path: {{ form.instance.file_path }}</p>
+        </div>
+        {% endblock content %}

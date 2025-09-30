@@ -1,0 +1,182 @@
+first i need
+
+Table Name : 
+column Name : 
+Colomn Number :
+complete this for all hard coded table Values
+
+
+
+Table Name : DIGITAL_OUTPUT(94)    <table id="dg_output">
+column Name : DO_Adress
+Colomn Number : 5
+LnT_DO_Address_List = ['0x3D840C', '0x3D840E', '0x3D8410', '0x3D8412', '0x3D8414', '0x3D8416']
+
+
+Table Name : DIGITAL_OUTPUT(94)    <table id="dg_output">
+column Name : DO_LnT_Val
+Colomn Number : 2
+LnT_DO_Address_Values = ['1111111111111110',
+                        '1111111111111101',
+                        '1111111111111111',
+                        '1111111111111111',
+                        '1111111111111111',
+                        '1111111111111111']
+
+                                    Like this come from GUI than code will run. 
+                                    these sending part to Lnt board
+
+
+Table Name : ANALOG_OUTPUT(12)    
+column Name : AO_Address
+Colomn Number : 5
+LnT_AO_Address_List = [
+                '0x6D0C6C', '0x6D0C6E', '0x6D0C70', '0x6D0C72', '0x6D0C74', '0x6D0C76',
+                '0x6D0C78', '0x6D0C7A', '0x6D0C7C', '0x6D0C7E', '0x6D0C80', '0x6D0C82'
+            ]
+
+
+
+Table Name : ANALOG_OUTPUT(12)
+column Name : AO_LnT_Val
+Colomn Number : 2
+LnT_AO_Address_Values = [
+                '+05.00', '+05.00', '+05.00', '+05.00', '+05.00', '+05.00',
+                '+05.00', '+05.00', '+05.00', '+05.00', '+05.00', '+05.00'
+            ]
+
+Table Name : DIGITAL_INPUT(204)       (Serialport) Sending
+column Name : DI_Ref_Val
+Colomn Number : 3
+Ref_DI_Values = [
+                 '1111111111111111', '1111111111111111', '1111111111111111', '1111111111111111',
+                 '1111111111111111', '1111111111111111', '1111111111111111', '1111111111111111',
+                 '1111111111111111', '1111111111111111', '1111111111111111', '1111111111111111',
+                 '1111111111111111']  
+                
+                 [FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF] 
+
+Table Name : ANALAOG_INPUT(48)   <table id="an_input">   (Serialport) Sending
+column Name : AI_Ref_Val
+Colomn Number : 3
+Ref_AI_Values = [00450
+                 00450
+                 0045000450004500045000450004500045000450004500045000450004500045000450004500045000450
+                 0045000450004500045000450004500045000450004500045000450004500045000450004500045000450
+                 0045000450004500045000450004500045000450004500045000450
+                 00450]
+        
+          
+SerialportsendingBothAdd(Ref_DI_Values + Ref_AI_Values)    Total Sending
+
+Result : FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+         004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450
+
+
+
+Receiving part :
+
+
+Table Name : DIGITAL_OUTPUT(94)       (Serialport)  Receiving
+column Name : DO_Ref_Val
+Colomn Number : 3
+Ref_DO_Values = [FFFFFFFFFFFFFFFFFFFFFFFF]  (24)
+
+
+Table Name : ANALAOG_OUTPUT(12)       (Serialport)
+column Name : AO_Ref_Val
+Colomn Number : 3
+Ref_AI_Values = [
+        [004500045000450004500045000450004500045000450004500045000450]  (60)
+
+        total result of serialport reeceiving (94)
+        [FFFFFFFFFFFFFFFFFFFFFFFF004500045000450004500045000450004500045000450004500045000450]
+
+
+
+
+Table Name : DIGITAL_INPUT(204)
+column Name : DI_LnT_Address
+Colomn Number : 5
+LnT_DI_Address_List = [
+                '0x4E080C', '0x4E080E', '0x4E0810', '0x4E0812', '0x4E0814',
+                '0x4E0816', '0x4E0818', '0x4E081A', '0x4E081C', '0x4E081E',
+                '0x4E0820', '0x4E0822', '0x4E0824'
+            ]
+
+Table Name : DIGITAL_INPUT(204)
+column Name : DI_LnT_Address
+Colomn Number : 2
+LnT_DI_Address_Values = [ 
+                            1111111111111111, 1111111111111111, 1111111111111111, 
+                            1111111111111111, 1111111111111111, 1111111111111111,
+                            1111111111111111, 1111111111111111, 1111111111111111, 
+                            1111111111111111, 1111111111111111, 1111111111111111,
+                            0000111111111111
+                        ]
+
+
+
+Table Name : ANALOG_INPUT(48)
+column Name : AI_LnT_Address
+Colomn Number : 5
+LnT_AI_Address_List = [
+                0x6D0C0C, 0x6D0C0E, 0x6D0C10, 0x6D0C12, 0x6D0C14, 0x6D0C16,
+                0x6D0C18, 0x6D0C1A, 0x6D0C1C, 0x6D0C1E, 0x6D0C20, 0x6D0C22,
+                0x6D0C24, 0x6D0C26, 0x6D0C28, 0x6D0C2A, 0x6D0C2C, 0x6D0C2E,
+                0x6D0C30, 0x6D0C32, 0x6D0C34, 0x6D0C36, 0x6D0C38, 0x6D0C3A,
+                0x6D0C3C, 0x6D0C3E, 0x6D0C40, 0x6D0C42, 0x6D0C44, 0x6D0C46,
+                0x6D0C48, 0x6D0C4A, 0x6D0C4C, 0x6D0C4E, 0x6D0C50, 0x6D0C52,
+                0x6D0C54, 0x6D0C56, 0x6D0C58, 0x6D0C5A, 0x6D0C5C, 0x6D0C5E,
+                0x6D0C60, 0x6D0C62, 0x6D0C64, 0x6D0C66, 0x6D0C68, 0x6D0C6A,
+            ]
+
+Table Name : ANALOG_INPUT(48)
+column Name : AI_LnT_Val
+Colomn Number : 2
+LnT_AI_Address_List = [
+                        '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.49',
+                        '4.50', '4.50', '4.50', '4.50', '4.50', '4.49', '4.49', '4.50', '4.49', 
+                        '4.49', '4.49', '4.49', '4.49', '4.49', '4.49', '4.49', '4.49', '4.49', 
+                        '4.50', '4.49', '4.49', '4.49', '4.49', '4.50', '4.50', '4.50', '4.50', 
+                        '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', 
+                        '4.50', '4.50', '4.50']
+
+
+
+Here make a new veriable which you need to show on Html after compelte
+
+
+
+# DO Sent: 0x3D840C -> 0xffff
+# DO Sent: 0x3D840E -> 0xffff
+# DO Sent: 0x3D8410 -> 0xffff
+# DO Sent: 0x3D8412 -> 0xffff
+# DO Sent: 0x3D8414 -> 0xffff
+# DO Sent: 0x3D8416 -> 0xffff
+
+# AO Sent: 0x6D0C6C -> 0x000C (+05.00V)
+# AO Sent: 0x6D0C6E -> 0x000C (+05.00V)
+# AO Sent: 0x6D0C70 -> 0x000C (+05.00V)
+# AO Sent: 0x6D0C72 -> 0x000C (+05.00V)
+# AO Sent: 0x6D0C74 -> 0x000C (+05.00V)
+# AO Sent: 0x6D0C76 -> 0x000C (+05.00V)
+# AO Sent: 0x6D0C78 -> 0x000C (+05.00V)
+# AO Sent: 0x6D0C7A -> 0x000C (+05.00V)
+# AO Sent: 0x6D0C7C -> 0x000C (+05.00V)
+# AO Sent: 0x6D0C7E -> 0x000C (+05.00V)
+# AO Sent: 0x6D0C80 -> 0x000C (+05.00V)
+# AO Sent: 0x6D0C82 -> 0x000C (+05.00V)
+
+
+# Serial Sent: FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450004500045000450
+
+# Received: 000000000000000000000003004980049800497004980049700497004970049700500005000050000500
+
+# LnT DI Values: 1111111111111111, 1111111111111111, 1111111111111111, 1111111111111111, 1111111111111111, 1111111111111111, 1111111111111111, 1111111111111111, 1111111111111111, 1111111111111111, 1111111111111111, 1111111111111111, 0000111111111111
+
+# ['4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.49',
+#  '4.50', '4.50', '4.50', '4.50', '4.50', '4.49', '4.49', '4.50', '4.49', 
+# '4.49', '4.49', '4.49', '4.49', '4.49', '4.49', '4.49', '4.49', '4.49', 
+# '4.50', '4.49', '4.49', '4.49', '4.49', '4.50', '4.50', '4.50', '4.50', 
+# '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50', '4.50']

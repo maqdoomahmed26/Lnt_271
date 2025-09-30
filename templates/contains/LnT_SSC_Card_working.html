@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSC CARD TEST</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #cce0f5;
+      padding: 30px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: #e9f6fb;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #003366;
+      font-size: 24px;
+    }
+
+    .btn-group {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      background: #0d6efd;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background: #084298;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    th {
+      background: #0e708b;
+      color: white;
+      text-align: center;
+      padding: 12px;
+      font-size: 16px;
+    }
+
+    td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    tr:hover {
+      background-color: #f1faff;
+    }
+
+    input[type="text"],
+    select {
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h2>SSC CARD TEST</h2>
+
+    <div class="btn-group">
+      <button class="btn" onclick="showNormalTest()">Normal Test</button>
+      <button class="btn" onclick="showLoopbackTest()">Loopback Test</button>
+      <button class="btn" onclick="generatePDF()">Generate PDF</button>
+      <button onclick="goBack()" class="btn">⬅ Back</button>
+    </div>
+
+    <!-- Normal Test -->
+    <table id="normalTable">
+      <thead>
+        <tr>
+          <th>Channel</th>
+          <th>Textbox</th>
+          <th>Dropdown</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in "12345678" %}
+        <tr>
+          <td>Channel {{ i }}</td>
+          <td><input type="text" placeholder="Read Value" id="txtReadN{{ i }}" name="txtReadN{{ i }}"></td>
+          <td>
+            <select id="DropdownN{{ i }}" onchange="setColor(this)">
+              <option value="NOT OK">NOT OK</option>
+              <option value="OK">OK</option>
+            </select>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Control buttons -->
+    <div style="margin-top:15px; text-align:center;">
+      <button id="btnStart" class="btn">Start Auto Read</button>
+      <button id="btnStop" class="btn">Stop</button>
+    </div>
+
+    <!-- Loopback Test -->
+    <table id="loopbackTable" style="display:none; margin-top:20px;">
+      <thead>
+        <tr>
+          <th>Channel</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in "12345678" %}
+        <tr>
+          <td>Channel {{ i }}</td>
+          <td>
+            <select id="DropdownL{{ i }}" onchange="setColor(this)">
+              <option value="NOT OK">NOT OK</option>
+              <option value="OK">OK</option>
+            </select>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    function showNormalTest() {
+      document.getElementById("normalTable").style.display = "table";
+      document.getElementById("loopbackTable").style.display = "none";
+    }
+
+    function showLoopbackTest() {
+      document.getElementById("normalTable").style.display = "none";
+      document.getElementById("loopbackTable").style.display = "table";
+    }
+
+    function generatePDF() {
+      alert("PDF generation logic goes here.");
+    }
+
+    function setColor(selectElement) {
+      if (selectElement.value === "OK") {
+        selectElement.style.backgroundColor = "green";
+        selectElement.style.color = "white";
+      } else {
+        selectElement.style.backgroundColor = "red";
+        selectElement.style.color = "white";
+      }
+    }
+
+    window.onload = function () {
+      showNormalTest();
+      document.querySelectorAll("select").forEach(function (sel) {
+        setColor(sel);
+      });
+    };
+
+    function goBack() {
+      window.location.href = "{% url 'LnT_Main_Details' %}";
+    }
+
+    // Auto Read Logic
+    let intervalId = null;
+
+    function fetchChannelData(channel) {
+      const txt = document.getElementById(`txtReadN${channel}`);
+      fetch(`/get_ReadN${channel}_id/`)
+        .then(response => response.json())
+        .then(data => {
+          txt.value = data[`ReadN${channel}_id_dec`];
+        })
+        .catch(error => {
+          console.error(`Error fetching Channel ${channel}:`, error);
+          txt.value = "Error";
+        });
+    }
+
+    function startAutoRead() {
+      if (intervalId) return;
+      intervalId = setInterval(() => {
+        for (let i = 1; i <= 8; i++) {
+          fetchChannelData(i);
+        }
+      }, 1000);
+    }
+
+    function stopAutoRead() {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("btnStart").addEventListener("click", startAutoRead);
+      document.getElementById("btnStop").addEventListener("click", stopAutoRead);
+    });
+  </script>
+
+</body>
+
+</html>

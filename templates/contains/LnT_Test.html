@@ -1,0 +1,4550 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{{ csrf_token }}" />
+  <title>Lnt Control Panel</title>
+  <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+  <script src="{% static 'js/jspdf.umd.min.js' %}"></script>
+  <script src="{% static 'js/jspdf.plugin.autotable.min.js' %}"></script>
+  <script src="{% static 'js/sweetalert.js' %}"></script>
+
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+  <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th,
+    td {
+      border: 4px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #5ce6f0;
+      /* #007bff;*/
+      color: rgb(233, 15, 15);
+
+      height: 50px;
+      /* Set the desired height */
+      line-height: 50px;
+      /* Aligns the text vertically */
+      text-align: center;
+      /* Optional: Centers the text horizontally */
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background-color: #5ce6f0 !important;
+      /* Keeps the original color */
+      z-index: 2;
+    }
+
+    td[contenteditable='true'] {
+      background-color: #e7f3ff;
+      border: 1px solid #f15b9c;
+    }
+
+    td[contenteditable='true']:hover {
+      background-color: #d5e9ff;
+      cursor: pointer;
+    }
+
+    .invalid-input {
+      background-color: #f8d7da !important;
+    }
+
+    .table-title {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      text-align: center;
+      color: #333;
+    }
+
+    .buttons {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    .buttons button {
+      margin-right: 10px;
+      padding: 10px 20px;
+      /* Increased padding for larger buttons */
+      border: none;
+      border-radius: 8px;
+      /* Rounded corners */
+      background-color: #ff0077;
+      /* Pinkish red background */
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      /* Set font size */
+      font-weight: bold;
+      /* Bold text */
+      text-transform: uppercase;
+      /* Uppercase text for emphasis */
+      cursor: pointer;
+      transition: all 0.3s ease;
+      /* Smooth transition for hover and active states */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      /* Subtle shadow */
+    }
+
+    .buttons button:hover {
+      background-color: #037d69;
+      /* Greenish background on hover */
+      transform: scale(1.05);
+      /* Slightly scale up on hover */
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      /* Increase shadow on hover */
+    }
+
+    .buttons button:active {
+      background-color: #d70056;
+      /* Darker shade when active */
+      transform: scale(0.98);
+      /* Slightly shrink when clicked */
+    }
+
+    /* Add some special styles for each button type */
+    .buttons .connect {
+      background-color: #135915;
+      /* Green for Connect */
+    }
+
+    .buttons .connect:hover {
+      background-color: #45a049;
+      /* Darker green for hover */
+    }
+
+    .buttons .disconnect {
+      background-color: #f44336;
+      /* Red for Disconnect */
+    }
+
+    .buttons .disconnect:hover {
+      background-color: #d32f2f;
+      /* Darker red for hover */
+    }
+
+    .buttons .generate {
+      background-color: #2196f3;
+      /* Blue for Generate */
+    }
+
+    .buttons .generate:hover {
+      background-color: #1976d2;
+      /* Darker blue for hover */
+    }
+
+    .buttons .cancel {
+      background-color: #9e9e9e;
+      /* Gray for Cancel */
+    }
+
+    .buttons .cancel:hover {
+      background-color: #757575;
+      /* Darker gray for hover */
+    }
+
+    .buttons .save {
+      background-color: #1407ce;
+      /* Green for Connect */
+    }
+
+    .buttons .save:hover {
+      background-color: #a733eb;
+      /* Darker green for hover */
+    }
+
+    .buttons .search {
+      background-color: #e4630e;
+      /* Green for Connect */
+    }
+
+    .buttons .board {
+      background-color: #e40ed2;
+      width: 250px;
+      /* Green for Connect */
+    }
+
+    .buttons .search:hover {
+      background-color: #9b5e03;
+      /* Darker green for hover */
+    }
+
+    .data-grid {
+      flex-grow: 1;
+      /* This will make the table grow to fill available space */
+      overflow: auto;
+      /* Allows scrolling if content exceeds */
+    }
+
+    .data-grid-buttons {
+      display: flex;
+      justify-content: right;
+      margin-bottom: 10px;
+    }
+
+    .data-grid-buttons button {
+      margin: 0 10px;
+      padding: 10px 20px;
+      width: 120px;
+      height: 40px;
+      border: 2px solid #168599;
+      border-radius: 18px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .data-grid-buttons button:hover {
+      background-color: #083bc7;
+      /* Darker shade on hover */
+      border-color: #0056b3;
+      /* Changes border color on hover */
+    }
+
+    /* .logo {
+      width: 70px;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+      margin: 10px auto;
+    } */
+
+    .logo {
+      width: 70px;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+      margin: 10px 0;
+      /* keep top/bottom margin only, remove auto centering */
+    }
+
+    .top-panel {
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      /* keeps left & right */
+      padding: 10px 20px;
+      background-color: #07a9e9;
+      color: white;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      height: 60px;
+
+      /* display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background-color: #07a9e9;
+      color: white;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      height: 60px; */
+    }
+
+    /* Ensure the middle section (date) stays in center */
+    .top-panel .center {
+      flex: 1;
+      text-align: center;
+    }
+
+    .top-panel img {
+      height: 80px;
+    }
+
+    .datetime {
+      font-size: 2rem;
+      font-weight: bold;
+      /* Makes the text bold */
+    }
+
+    .control-panel label {
+      margin-right: 20px;
+      /* font-weight: bold; Makes the text bold */
+    }
+
+    .control-panel {
+      margin-bottom: 20px;
+    }
+
+    .control-panel {
+      margin-bottom: 20px;
+      background-color: #5ce6f0;
+      /* Light yellow background */
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .control-panel label {
+      display: inline-block;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    .control-panel input,
+    .control-panel select {
+      display: inline-block;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    .data-grid.table1 {
+      height: 400px;
+      border: 1px solid #ccc;
+      overflow-x: auto;
+      white-space: nowrap;
+      margin: 20px auto;
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .data-grid::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+
+    .data-grid::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .data-grid::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 3px;
+    }
+
+    .data-grid::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    .checkbox {
+      appearance: none;
+      /* Remove default checkbox styling */
+      width: 35px;
+      /* Square size */
+      height: 35px;
+      /* Square size */
+      border: 2px solid #205122;
+      /* Custom green border */
+      border-radius: 4px;
+      /* Optional: Slight rounding for smoother edges */
+      background-color: white;
+      /* Background color */
+      cursor: pointer;
+      /* Improve user experience */
+      position: relative;
+      /* Required for custom checkmark */
+
+      /* Custom checkmark */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .checkbox:checked::after {
+      content: '✔';
+      /* Custom checkmark */
+      color: #4caf50;
+      font-size: 20px;
+      /* Checkmark size */
+      font-weight: bold;
+    }
+
+    label {
+      font-size: 20px;
+      /* Adjust the size as needed */
+      font-weight: bold;
+      /* Optional: Make it bold for emphasis */
+      color: #333;
+      /* Optional: Darker color for better readability */
+    }
+
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      z-index: 9999;
+    }
+
+    /* Logo */
+
+    .logo-container {
+      flex: 1;
+      /* Ensures the logo takes up the space and doesn't crowd the other sections */
+      display: flex;
+      justify-content: flex-start;
+      /* Aligns the logo to the left */
+    }
+
+    /* .logo {
+      width: 40px;
+      height: auto;
+    } */
+
+    .logo {
+      width: 80px;
+      /* increase size */
+      height: 80px;
+      /* make it square */
+      border-radius: 50%;
+      /* makes it a perfect circle */
+      object-fit: cover;
+      /* ensures image scales without distortion */
+    }
+
+    select {
+      font-size: 14px;
+      text-align: center;
+    }
+
+
+    .DI_dropdown_table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px auto;
+    }
+
+    .DI_dropdown_table td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    .DI_dropdown_table label {
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+      display: inline-block;
+      margin-bottom: 5px;
+    }
+
+    select {
+      width: 100px;
+      height: 38px;
+      padding: 5px;
+      font-size: 14px;
+      border: 2px solid #007bff;
+      border-radius: 6px;
+      background-color: #f8f9fa;
+      color: #333;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    select:hover {
+      border-color: #0056b3;
+      background-color: #e9f5ff;
+    }
+
+    select:focus {
+      border-color: #0056b3;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+  </style>
+</head>
+
+<body>
+  <input type="hidden" id="product_description" value="{{ main_details.product_description }}" />
+  <input type="hidden" id="cat_no" value="{{ main_details.cat_no }}" />
+  <input type="hidden" id="serial_no" value="{{ main_details.serial_no }}" />
+  <input type="hidden" id="manufacturing_date" value="{{ main_details.manufacturing_date }}" />
+  <input type="hidden" id="project_name" value="{{ main_details.project_name }}" />
+  <input type="hidden" id="project_no" value="{{ main_details.project_no }}" />
+  <input type="hidden" id="customer_name" value="{{ main_details.customer_name }}" />
+  <input type="hidden" id="customer_reference_no" value="{{ main_details.customer_reference_no }}" />
+  <input type="hidden" id="testedby1" value="{{ main_details.testedby1 }}" />
+  <!-- Footer -->
+  <input type="hidden" id="bill_of_material" value="{{ main_details.bill_of_material }}" />
+  <input type="hidden" id="ga_assembly_instruction" value="{{ main_details.ga_assembly_instruction }}" />
+  <input type="hidden" id="test_instruction" value="{{ main_details.test_instruction }}" />
+  <input type="hidden" id="manufacturing" value="{{ main_details.manufacturing }}" />
+  <input type="hidden" id="date1" value="{{ main_details.date1 }}" />
+  <input type="hidden" id="quality_control_review" value="{{ main_details.quality_control_review }}" />
+  <input type="hidden" id="date2" value="{{ main_details.date2 }}" />
+  <input type="hidden" id="customer_inspection" value="{{ main_details.customer_inspection }}" />
+  <input type="hidden" id="date3" value="{{ main_details.date3 }}" />
+
+  <!-- <div class="top-panel">    
+  <div class="logo-container">
+    <img src="{% static 'Images/Rugrel.png' %}" alt="Rugrel Logo" class="logo" />
+  </div>
+
+    <div class="datetime">
+      <strong>Current Date:</strong> <span id="current-date"></span>
+    </div>
+    
+    <div class="datetime">
+      <strong>Current Time:</strong> <span id="current-time"></span>
+    </div>
+  </div> -->
+
+  <!-- <div class="top-panel">
+    <div class="logo-container">
+      <img src="{% static 'Images/Rugrel.png' %}" alt="Rugrel Logo" class="logo" />
+    </div>
+
+    <div class="datetime">
+      <strong>Current Date:</strong> <span id="current-date"></span>
+    </div>
+    
+    <div class="datetime">
+      <strong>Current Time:</strong> <span id="current-time"></span>
+    </div>
+  </div> -->
+
+  <div class="top-panel">
+    <!-- Left: Logo -->
+    <div class="logo-container">
+      <img src="{% static 'Images/Rugrel.png' %}" alt="Rugrel Logo" class="logo" />
+    </div>
+
+    <!-- Center: Current Date -->
+    <div class="datetime center">
+      <strong>Current Date:</strong> <span id="current-date"></span>
+    </div>
+
+    <!-- Right: Current Time -->
+    <div class="datetime right">
+      <strong>Current Time:</strong> <span id="current-time"></span>
+    </div>
+  </div>
+
+  <!-- Control Panel -->
+  <div class="control-panel">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
+    <label for="IDTextBox">Serial No:</label>
+    <input type="text" id="IDTextBox" placeholder="Enter Reord ID No" style="width: 150px;" />
+
+    <div class="buttons">
+      <!-- <button id="btnSearch" class="search">Search</button> -->
+
+      <button id="btnSave" class="save">Save</button>
+      <!-- <button id="btnReset" class="save">Reset</button> -->
+      <button onclick="location.reload();">Refresh</button>
+      <button id="btnDelete" class="search">Delete</button>
+      <button class="btn" type="button" onclick="history.back()">Back</button>
+
+      <!-- <button id="btnRefresh" class="save">Refresh</button> -->
+    </div>
+
+    <div class="buttons">
+      <button onclick="generatePDF_DI()">DOWNLOAD MIXED IO CARD PDF</button>
+    </div>
+  </div>
+
+  <script>
+    function updateDateTime() {
+      const now = new Date()
+
+      // Format date (e.g., 27-Apr-2025)
+      const options = { day: '2-digit', month: 'short', year: 'numeric' }
+      document.getElementById('current-date').textContent = now.toLocaleDateString('en-GB', options)
+
+      // Format time (e.g., 10:15:30 AM)
+      const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }
+      document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', timeOptions)
+    }
+
+    // Update immediately
+    updateDateTime()
+
+    // Update every second
+    setInterval(updateDateTime, 1000)
+  </script>
+
+  <script>
+    async function generatePDF_DI() {
+      // HEADER values
+      const imageUrl = "{% static 'Images/LnT_Logo1.png' %}"
+      const product_description = document.getElementById('product_description')?.value || ''
+      const cat_no = document.getElementById('cat_no')?.value || ''
+      const serial_no = document.getElementById('serial_no')?.value || ''
+      const manufacturing_date = document.getElementById('manufacturing_date')?.value || ''
+      const project_name = document.getElementById('project_name')?.value || ''
+      const project_no = document.getElementById('project_no')?.value || ''
+      const customer_name = document.getElementById('customer_name')?.value || ''
+      const customer_reference_no = document.getElementById('customer_reference_no')?.value || ''
+      const testedby1 = document.getElementById('testedby1')?.value || ''
+
+      // FOOTER values
+      const bill_of_material = document.getElementById('bill_of_material')?.value || ''
+      const ga_instruction = document.getElementById('ga_assembly_instruction')?.value || ''
+      const test_instruction = document.getElementById('test_instruction')?.value || ''
+
+      const manufacturing = document.getElementById('manufacturing')?.value || ''
+      const date1 = document.getElementById('date1')?.value || ''
+      const quality_control_review = document.getElementById('quality_control_review')?.value || ''
+      const date2 = document.getElementById('date2')?.value || ''
+      const customer_inspection = document.getElementById('customer_inspection')?.value || ''
+      const date3 = document.getElementById('date3')?.value || ''
+      const { jsPDF } = window.jspdf
+      const doc = new jsPDF()
+
+      debugger
+
+      const margin = 3
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const pageHeight = doc.internal.pageSize.getHeight()
+      const usableWidth = pageWidth - 2 * margin
+
+      doc.rect(margin, margin, usableWidth, pageHeight - 2 * margin)
+
+      let startX = margin
+      let startY = margin
+      let cellHeight = 12
+      let y = startY + cellHeight * 5 + 5
+
+      const imageDataUrl = await fetch(imageUrl)
+        .then((response) => response.blob())
+        .then(
+          (blob) =>
+            new Promise((resolve, reject) => {
+              const reader = new FileReader()
+              reader.onloadend = () => resolve(reader.result)
+              reader.onerror = reject
+              reader.readAsDataURL(blob)
+            })
+        )
+
+      const colWidths = [usableWidth / 4, usableWidth / 4, usableWidth / 4, usableWidth / 4]
+
+      doc.rect(startX, startY, usableWidth, cellHeight * 4)
+
+      doc.setFontSize(18)
+      doc.setFont('times', 'italic', 'bold')
+      doc.addImage(imageDataUrl, 'PNG', startX + 2, startY + 1.5, 70, 9)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(11)
+
+      const title = 'MIXED IO CARD TEST REPORT'
+      const titleWidth = doc.getTextWidth(title)
+      doc.text(title, pageWidth - titleWidth - 9, startY + 9)
+
+      addPageHeaderFooterDI(doc)
+      // // //================================================================================
+
+      // === Resistance Test Section ===
+
+      y -= 12 // Add spacing after previous table
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'bold')      
+      doc.text('1-   Powering Up Test Cases ', margin + 6, y)
+
+       y += 5
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(10)
+      doc.text('1.1-   Resistance Test – VME Mixed IO Base Card', margin + 6, y)
+
+      y += 5
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(9)
+      doc.text('Backplane Power', margin + 6, y)
+
+      // Backplane Power Table
+      // Horizontal line below title    
+      y -= 2
+      doc.setLineWidth(0.2); // Optional: make line thicker
+      doc.line(8, 67, 197, 67); // From x=4 to x=206 at y=62
+      doc.line(8, 71, 197, 71);
+      doc.line(8, 90, 197, 90);
+
+      // Vertical lines (4 total)
+      doc.line(8, 67, 8, 90);
+      doc.line(55, 67, 55, 90);
+      doc.line(105, 67, 105, 90);
+      doc.line(155, 67, 155, 90);
+      doc.line(197, 67, 197, 90);
+
+
+      y += 6
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+
+      // Define column positions for consistent alignment
+      const col1X = margin + 4
+      const col2X = margin + 65
+      const col3X = margin + 115
+      const col4X = pageWidth - margin - 40
+
+      // Row 1
+      doc.text('Measured', 15, y)
+      doc.text('With respect to:', 65, y)
+      doc.text('Passing Value', 120, y)
+      // doc.text('Measured Value:', 140, y)
+      doc.text('Measured Value:', pageWidth - margin - 40, y)
+
+      y += 4
+
+      const resistanceData = [
+        { no: '1.', measured: 'P1 connector pin C31 (+12V)', gnd: 'D31 (GND)', passval: 'R13', id: 'R1' },
+        { no: '2.', measured: 'P1 connector pin A31 (-12V)', gnd: 'D31 (GND)', passval: 'R14', id: 'R2' },
+        { no: '3.', measured: 'P1 connector pin D32 (+5V)', gnd: 'D31 (GND)', passval: 'R15', id: 'R3' },
+        { no: '4.', measured: 'P1 connector pin D30 (+3.3V)', gnd: 'D31 (GND)', passval: 'R16', id: 'R4' }
+      ]
+
+      resistanceData.forEach((item) => {
+        const val = document.getElementById(item.id)?.value || ''
+        const pval = document.getElementById(item.passval)?.value || ''
+        doc.setFont('helvetica', 'normal')
+        doc.text(`${item.no} ${item.measured}:`, margin + 8, y)
+        doc.text(`${pval}`, margin + 115, y)
+        doc.text(item.gnd, margin + 65, y)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${val} Ohm`, pageWidth - margin - 25, y, { align: 'right' })
+        y += 5
+      })
+
+      // === PMIC Power ===
+
+      y += 0
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.text('PMIC Power & DC-DC Power', margin + 6, y)
+      y += 4
+
+      doc.setLineWidth(0.2); // Optional: make line thicker
+      doc.line(8, 95, 197, 95); // From x=4 to x=206 at y=62
+      doc.line(8, 99, 197, 99);
+      doc.line(8, 119, 197, 119);
+
+      // Vertical lines (4 total)
+      doc.line(8, 95, 8, 119);
+      doc.line(55, 95, 55, 119);
+      doc.line(105, 95, 105, 119);
+      doc.line(155, 95, 155, 119);
+      doc.line(197, 95, 197, 119);
+
+
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Measured', margin + 9, y)
+      doc.text('Passing Value', margin + 115, y)
+      doc.text('With respect to:', margin + 65, y)
+      doc.text('Measured Value:', pageWidth - margin - 40, y)
+      y += 5
+
+      const pmicData = [
+        { no: '5.', measured: 'TP38 (+3.3V_Flash)', gnd: 'TP18 (GND)', passval: 'R17', id: 'R5' },
+        { no: '6.', measured: 'TP36 (+1.0V)', gnd: 'TP18 (GND)', passval: 'R18', id: 'R6' },
+        { no: '7.', measured: 'TP34 (+1.8V)', gnd: 'TP18 (GND)', passval: 'R19', id: 'R7' },
+        { no: '8.', measured: 'TP21 (+5V)', gnd: 'TP18 (GND)', passval: 'R20', id: 'R8' }
+      ]
+
+      pmicData.forEach((item) => {
+        const val = document.getElementById(item.id)?.value || ''
+        const pval = document.getElementById(item.passval)?.value || ''
+        doc.setFont('helvetica', 'normal')
+        doc.text(`${item.no} ${item.measured}:`, margin + 9, y)
+        doc.text(`${pval}`, margin + 115, y)
+        doc.text(item.gnd, margin + 65, y)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${val} Ohm`, pageWidth - margin - 25, y, { align: 'right' })
+        y += 5
+      })
+
+
+      // === FIELD Power  ===
+
+      y += 0
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.text('FIELD Power ', margin + 6, y)
+      y += 4
+
+      doc.setLineWidth(0.2); // Optional: make line thicker
+      doc.line(8, 124, 197, 124); // From x=4 to x=206 at y=62
+      doc.line(8, 128, 197, 128);
+      doc.line(8, 149, 197, 149);
+
+      // Vertical lines (4 total)
+      doc.line(8, 124, 8, 149);
+      doc.line(55, 124, 55, 149);
+      doc.line(105, 124, 105, 149);
+      doc.line(155, 124, 155, 149);
+      doc.line(197, 124, 197, 149);
+
+
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Measured', margin + 9, y)
+      doc.text('Passing Value', margin + 115, y)
+      doc.text('With respect to:', margin + 65, y)
+      doc.text('Measured Value:', pageWidth - margin - 40, y)
+      y += 5
+
+      const pmicData2 = [
+        { no: '1.', measured: 'TP25 (+5V_FILED)', gnd: 'P2.C1 (F_GND)', passval: 'R21', id: 'R9' },
+        { no: '2.', measured: 'TP26 (+15V_FILED)', gnd: 'P2.C1 (F_GND)', passval: 'R22', id: 'R10' },
+        { no: '3.', measured: 'TP27 (-15V_FILED)', gnd: 'P2.C1 (F_GND)', passval: 'R23', id: 'R11' },
+        { no: '4.', measured: 'TP30 (+3.3V_FILED)', gnd: 'P2.C1 (F_GND)', passval: 'R24', id: 'R12' }
+      ]
+
+      pmicData2.forEach((item) => {
+        const val = document.getElementById(item.id)?.value || ''
+        const pval = document.getElementById(item.passval)?.value || ''
+        doc.setFont('helvetica', 'normal')
+        doc.text(`${item.no} ${item.measured}:`, margin + 9, y)
+        // doc.text(item.passval, margin + 115, y)
+        doc.text(`${pval}`, margin + 115, y)
+        doc.text(item.gnd, margin + 65, y)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${val} Ohm`, pageWidth - margin - 25, y, { align: 'right' })
+        y += 5
+      })
+
+     
+//=========================================================================//
+
+// === Resistance Test Section ===
+      y += 4 // Add spacing after previous table
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.text('1.2-   Resistance Test – GP DO Daughter Card.', margin + 6, y)
+
+
+      // Commented1
+      doc.setLineWidth(0.2); // Optional: make line thicker
+      doc.line(8, 157, 197, 157); // From x=4 to x=206 at y=62
+      doc.line(8, 161, 197, 161);
+      doc.line(8, 181, 197, 181);
+
+      // Vertical lines (4 total)
+      doc.line(8, 157, 8, 181);
+      doc.line(55, 157, 55, 181);
+      doc.line(105, 157, 105, 181);
+      doc.line(155, 157, 155, 181);
+      doc.line(197, 157, 197, 181);
+
+
+      y += 4
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+
+      // Define column positions for consistent alignment
+      const col11X = margin + 4
+      const col12X = margin + 65
+      const col13X = margin + 115
+      const col14X = pageWidth - margin - 40
+
+      // Row 1
+      doc.text('Measured', 15, y)
+      doc.text('With respect to:', 65, y)
+      doc.text('Passing Value', 120, y)
+      // doc.text('Measured Value:', 140, y)
+      doc.text('Measured Value:', pageWidth - margin - 40, y)
+
+      y += 5
+
+      const Resistance_GP_DO_Daughter = [
+        { no: '1.', measured: 'TP6 (+15V_FIELD)', gnd: 'TP11 (FIELD_GND)', passval: 'R37', id: 'R25' },
+        { no: '2.', measured: 'TP7 (-15V_FIELD)', gnd: 'TP11 (FIELD_GND)', passval: 'R38', id: 'R26' },
+        { no: '3.', measured: 'TP8 (+5V_FIELD)', gnd: 'TP11 (FIELD_GND)', passval: 'R39', id: 'R27' },
+        { no: '4.', measured: 'TP9 (+3.3V_FIELD)', gnd: 'TP11 (FIELD_GND)', passval: 'R40', id: 'R28' }
+      ]
+
+      Resistance_GP_DO_Daughter.forEach((item) => {
+        const val = document.getElementById(item.id)?.value || ''
+        const pval = document.getElementById(item.passval)?.value || ''
+        doc.setFont('helvetica', 'normal')
+        doc.text(`${item.no} ${item.measured}:`, margin + 8, y)
+        doc.text(`${pval}`, margin + 115, y)
+        doc.text(item.gnd, margin + 65, y)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${val} Ohm`, pageWidth - margin - 25, y, { align: 'right' })
+        y += 5
+      })
+
+      // === PMIC Power ===
+
+      y += 3
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.text('1.3-   Resistance Test – GP DI Daughter Card', margin + 6, y)
+      y += 5
+
+
+      //  commented 2
+      doc.setLineWidth(0.2); // Optional: make line thicker
+      doc.line(8, 190, 197, 190); // From x=4 to x=206 at y=62
+      doc.line(8, 194, 197, 194);
+      doc.line(8, 214, 197, 214);
+
+      // Vertical lines (4 total)
+      doc.line(8, 190, 8, 214);
+      doc.line(55, 190, 55, 214);
+      doc.line(105, 190, 105, 214);
+      doc.line(155, 190, 155, 214);
+      doc.line(197, 190, 197, 214);
+
+
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Measured', margin + 9, y)
+      doc.text('Passing Value', margin + 115, y)
+      doc.text('With respect to:', margin + 65, y)
+      doc.text('Measured Value:', pageWidth - margin - 40, y)
+      y += 5
+
+      const Resistance_GP_DI_Daughter = [
+        { no: '1.', measured: 'TP6 (+15V_FIELD)', gnd: 'TP10 (FIELD_GND)', passval: 'R41', id: 'R29' },
+        { no: '2.', measured: 'TP7 (-15V_FIELD)', gnd: 'TP10 (FIELD_GND)', passval: 'R42', id: 'R30' },
+        { no: '3.', measured: 'TP8 (+5V_FIELD)', gnd: 'TP10 (FIELD_GND)', passval: 'R43', id: 'R31' },
+        { no: '4.', measured: 'TP9 (+3.3V_FIELD)', gnd: 'TP10 (FIELD_GND)', passval: 'R44', id: 'R32' }
+      ]
+
+      Resistance_GP_DI_Daughter.forEach((item) => {
+        const val = document.getElementById(item.id)?.value || ''
+        const pval = document.getElementById(item.passval)?.value || ''
+        doc.setFont('helvetica', 'normal')
+        doc.text(`${item.no} ${item.measured}:`, margin + 9, y)
+        doc.text(`${pval}`, margin + 115, y)
+        doc.text(item.gnd, margin + 65, y)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${val} Ohm`, pageWidth - margin - 25, y, { align: 'right' })
+        y += 5
+      })
+
+
+      // === FIELD Power  ===
+
+      y += 2
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.text('1.4-   Resistance Test – GP AIO Daughter Card ', margin + 6, y)
+      y += 5
+
+     // commented 3
+
+      doc.setLineWidth(0.2); // Optional: make line thicker
+      doc.line(8, 222, 197, 222); // From x=4 to x=206 at y=62
+      doc.line(8, 226, 197, 226);
+      doc.line(8, 246, 197, 246);
+
+      // Vertical lines (4 total)
+      doc.line(8, 222, 8, 246);
+      doc.line(55, 222, 55, 246);
+      doc.line(105, 222, 105, 246);
+      doc.line(155, 222, 155, 246);
+      doc.line(197, 222, 197, 246);
+
+
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Measured', margin + 9, y)
+      doc.text('Passing Value', margin + 115, y)
+      doc.text('With respect to:', margin + 65, y)
+      doc.text('Measured Value:', pageWidth - margin - 40, y)
+      y += 5
+
+       const Resistance_GP_AIO_Daughter = [
+        { no: '1.', measured: 'TP6 (+15V_FIELD)', gnd: 'TP10 (FIELD_GND)', passval: 'R45', id: 'R33' },
+        { no: '2.', measured: 'TP7 (-15V_FIELD)', gnd: 'TP10 (FIELD_GND)', passval: 'R46', id: 'R34' },
+        { no: '3.', measured: 'TP8 (+5V_FIELD)', gnd: 'TP10 (FIELD_GND)', passval: 'R47', id: 'R35' },
+        { no: '4.', measured: 'TP9 (+3.3V_FIELD)', gnd: 'TP10 (FIELD_GND)', passval: 'R48', id: 'R36' }
+      ]
+
+      Resistance_GP_AIO_Daughter.forEach((item) => {
+        const val = document.getElementById(item.id)?.value || ''
+        const pval = document.getElementById(item.passval)?.value || ''
+        doc.setFont('helvetica', 'normal')
+        doc.text(`${item.no} ${item.measured}:`, margin + 9, y)
+        doc.text(`${pval}`, margin + 115, y)    
+        doc.text(item.gnd, margin + 65, y)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${val} Ohm`, pageWidth - margin - 25, y, { align: 'right' })
+        y += 5
+      })
+     
+
+
+
+
+
+//=========================================================================//////////////////
+// New Blank page 
+
+doc.addPage()
+      addPageHeaderFooterDI(doc)
+
+ // === Voltage Test ===
+
+      y -= 190
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'bold')
+      doc.text('2-   Voltage Test :', margin + 6, y)
+      y += 6
+
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.text('2.1-   PMIC & Peripherals Power', margin + 6, y)
+      y += 5
+
+      doc.setLineWidth(0.2); // Optional: make line thicker
+      doc.line(8, 67, 197, 67); // From x=4 to x=206 at y=62
+      doc.line(8, 72, 197, 72);
+      doc.line(8, 97, 197, 97);
+
+      // Vertical lines (4 total)
+      doc.line(8, 67, 8, 97);
+      doc.line(55, 67, 55, 97);
+      doc.line(105, 67, 105, 97);
+      doc.line(125, 67, 125, 97);
+      doc.line(155, 67, 155, 97);
+      doc.line(197, 67, 197, 97);
+
+
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Measured', margin + 9, y)
+      doc.text('With respect to:', margin + 60, y)
+      doc.text('Ideal Volts', margin + 105, y)
+      doc.text('Passing Range', margin + 130, y)
+      doc.text('Measured Value', pageWidth - margin - 20, y, { align: 'right' })
+      y += 5
+
+      const pmicPeripheralsData = [
+        { no: '1.', measured: 'TP21 (+5V)', gnd: 'TP18 (GND)', ideal: '+5V', range: '4.85V - 5.20V', id: 'V1' },
+        { no: '2.', measured: 'TP22 (+3.3V)', gnd: 'TP18 (GND)', ideal: '+3.3V', range: '3.24V - 3.38V', id: 'V2' },
+        { no: '6.', measured: 'TP38 (+3.3V_Flash)', gnd: 'TP18 (GND)', ideal: '+3.3V', range: '3.24V - 3.38V', id: 'V3' },
+        { no: '7.', measured: 'TP36 (+1.0V)', gnd: 'TP18 (GND)', ideal: '+1.0V', range: '0.997V - 1.003V', id: 'V4' },
+        { no: '8.', measured: 'TP34 (+1.8V)', gnd: 'TP18 (GND)', ideal: '+1.8V', range: '1.78V - 1.82V', id: 'V5' }
+      ]
+
+      pmicPeripheralsData.forEach((item) => {
+        const val = document.getElementById(item.id)?.value || ''
+        doc.setFont('helvetica', 'normal')
+        doc.text(`${item.no} ${item.measured}`, margin + 9, y)
+        doc.text(item.gnd, margin + 60, y)
+        doc.text(item.ideal, margin + 105, y)
+        doc.text(item.range, margin + 130, y)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${val} Volts`, pageWidth - margin - 20, y, { align: 'right' })
+        y += 5
+      })
+
+
+
+      y += 3
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+
+      doc.text('2.2-   Field Power', margin + 6, y)
+      y += 5
+
+      doc.setLineWidth(0.2); // Optional: make line thicker
+      doc.line(8, 105, 197, 105); // From x=4 to x=206 at y=62
+      doc.line(8, 110, 197, 110);
+      doc.line(8, 140, 197, 140);
+
+      // Vertical lines (4 total)
+      doc.line(8, 105, 8, 140);
+      doc.line(55, 105, 55, 140);
+      doc.line(105, 105, 105, 140);
+      doc.line(125, 105, 125, 140);
+      doc.line(155, 105, 155, 140);
+      doc.line(197, 105, 197, 140);
+
+
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Measured', margin + 9, y)
+      doc.text('With respect to:', margin + 60, y)
+      doc.text('Ideal Volts', margin + 105, y)
+      doc.text('Passing Range', margin + 130, y)
+      doc.text('Measured Value', pageWidth - margin - 20, y, { align: 'right' })
+      y += 5
+
+      const VoltageFieldPowerData = [
+        { no: '1.', measured: 'TP16', gnd: 'P2.C1 (F_GND)', ideal: '+12.0V', range: '+11.85V_+12.50V', id: 'V1' },
+        { no: '2.', measured: 'TP17', gnd: 'P2.C1 (F_GND)', ideal: '-12.0V', range: '-11.85V_-12.50V', id: 'V2' },
+        { no: '3.', measured: 'TP25', gnd: 'P2.C1 (F_GND)', ideal: '+5V_FILED', range: '+4.85V_+5.20V', id: 'V3' },
+        { no: '4.', measured: 'TP26', gnd: 'P2.C1 (F_GND)', ideal: '+15V_FILED', range: '+14.85V_+15.50V', id: 'V4' },
+        { no: '5.', measured: 'TP27', gnd: 'P2.C1 (F_GND)', ideal: '-15V_FILED', range: '-14.85V_-15.50V', id: 'V5' },
+        { no: '6.', measured: 'TP30', gnd: 'P2.C1 (F_GND)', ideal: '+3.3V_FILED', range: '+3.24V_+3.38V', id: 'V5' }
+      ]
+
+      VoltageFieldPowerData.forEach((item) => {
+        const val = document.getElementById(item.id)?.value || ''
+        doc.setFont('helvetica', 'normal')
+        doc.text(`${item.no} ${item.measured}`, margin + 9, y)
+        doc.text(item.gnd, margin + 60, y)
+        doc.text(item.ideal, margin + 105, y)
+        doc.text(item.range, margin + 125, y)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${val} Volts`, pageWidth - margin - 20, y, { align: 'right' })
+        y += 5
+      })
+
+      //=== LED TEST SECTION ====//
+
+       y += 10
+      doc.setFontSize(12)
+      doc.text('3-   Fascia LED :', margin + 6, y)
+      y += 4
+
+      // Backplane Power Table
+      // Horizontal line below title
+      doc.setLineWidth(0.2); // Optional: make line thicker
+      doc.line(8, 155, 197, 155); // From x=4 to x=206 at y=62
+      doc.line(8, 160, 197, 160);
+      doc.line(8, 180, 197, 180);
+      doc.line(8, 185, 197, 185);
+
+      // Vertical lines (4 total)
+      doc.line(8, 155, 8, 185);
+      doc.line(55, 155, 55, 185);
+      doc.line(105, 155, 105, 185);
+      doc.line(155, 155, 155, 185);
+      doc.line(197, 155, 197, 185);
+
+
+
+      doc.setFontSize(7)
+      doc.setFont('helvetica', 'bold')
+      doc.text('1 (Left)', margin + 15, y)
+      doc.text('2', margin + 70, y)
+      doc.text('3', margin + 120, y)
+      doc.text('4 (Right)', margin + 165, y)
+      y += 5
+
+      const LEDData = [
+        { label: 'DEBUG1', id: 'select_26' },
+        { label: 'DEBUG2', id: 'select_27' },
+        { label: 'DEBUG3', id: 'select_28' },
+        { label: 'DEBUG4', id: 'select_29' },
+        { label: '+3.3V', id: 'select_30' },
+        { label: '+5.0V', id: 'select_31' },
+        { label: '-12V', id: 'select_32' },
+        { label: '+12V', id: 'select_33' },
+        { label: '+1.8V', id: 'select_34' },
+        { label: '+1.0V', id: 'select_35' },
+        { label: 'DONE', id: 'select_36' },
+        { label: 'CARD ACTIVE', id: 'select_37' },
+        { label: 'DAUGHTER 3', id: 'select_38' },
+        { label: 'DAUGHTER 2', id: 'select_39' },
+        { label: 'DAUGHTER 1', id: 'select_40' },
+        { label: 'NA', id: 'select_41' },
+        { label: '+3.3V_FIELD', id: 'select_42' },
+        { label: '+5V_FIELD', id: 'select_43' },
+        { label: '-15V_FIELD', id: 'select_44' },
+        { label: '+15V_FIELD', id: 'select_45' }
+
+      ];
+
+      doc.setFontSize(8);
+      // doc.setFont("helvetica", "normal");
+
+      for (let i = 0; i < LEDData.length; i += 4) {
+        // Column 1
+        const label1 = LEDData[i].label;
+        const value1 = document.getElementById(LEDData[i].id)?.value || '';
+        doc.setFont("helvetica", "normal");
+        doc.text(label1, margin + 8, y);             // Label
+        doc.text(':', margin + 33, y);
+        doc.setFont("helvetica", "bold");             // Colon aligned
+        doc.text(value1, margin + 38, y);             // Value
+
+        // Column 2
+        const label2 = LEDData[i + 1].label;
+        const value2 = document.getElementById(LEDData[i + 1].id)?.value || '';
+        doc.setFont("helvetica", "normal");
+        doc.text(label2, margin + 55, y);
+        doc.text(':', margin + 78, y);
+        doc.setFont("helvetica", "bold");
+        doc.text(value2, margin + 82, y);
+
+        // Column 3
+        const label3 = LEDData[i + 2].label;
+        const value3 = document.getElementById(LEDData[i + 2].id)?.value || '';
+        doc.setFont("helvetica", "normal");
+        doc.text(label3, margin + 105, y);
+        doc.text(':', margin + 133, y);
+        doc.setFont("helvetica", "bold");
+        doc.text(value3, margin + 137, y);
+
+        // Column 4
+        const label4 = LEDData[i + 3].label;
+        const value4 = document.getElementById(LEDData[i + 3].id)?.value || '';
+        doc.setFont("helvetica", "normal");
+        doc.text(label4, margin + 155, y);
+        doc.text(':', margin + 178, y);
+        doc.setFont("helvetica", "bold");
+        doc.text(value4, margin + 182, y);
+
+        y += 5;
+
+        // Handle page overflow
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+      }
+
+      // Add a new page for table
+      doc.addPage()
+      addPageHeaderFooterDI(doc)
+      function addPageHeaderFooterDI(doc) {
+        const margin = 3
+        const pageWidth = doc.internal.pageSize.getWidth()
+        const pageHeight = doc.internal.pageSize.getHeight()
+        const usableWidth = pageWidth - 2 * margin
+
+        doc.rect(margin, margin, usableWidth, pageHeight - 2 * margin)
+
+        let startX = margin
+        let startY = margin
+        let cellHeight = 12
+        let y = startY + cellHeight * 5 + 5
+        
+
+        const colWidths = [usableWidth / 4, usableWidth / 4, usableWidth / 4, usableWidth / 4]
+
+        doc.rect(startX, startY, usableWidth, cellHeight * 4)
+
+        doc.setFontSize(18)
+        doc.setFont('times', 'italic', 'bold')
+        doc.addImage(imageDataUrl, 'PNG', startX + 2, startY + 1.5, 70, 9)
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(11)
+
+        const title = 'MIXED IO CARD TEST REPORT'
+        const titleWidth = doc.getTextWidth(title)
+        doc.text(title, pageWidth - titleWidth - 9, startY + 9)
+
+
+
+        //=====================================================
+        y = startY + cellHeight
+
+        const colWidths1 = [80, 30, 40, 54]
+        const labelRowHeight = 6
+        const valueRowHeight = 12
+
+        // ---------- HEADER LABEL ROW 1 ----------
+        const labels1 = ['PRODUCT DESCRIPTION', 'CAT NO.', 'SERIAL NO.', 'MANUFACTURING MM/YY']
+        let x = startX
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'normal')
+
+        for (let i = 0; i < labels1.length; i++) {
+          doc.rect(x, y, colWidths1[i], labelRowHeight)
+
+          doc.text(labels1[i], x + colWidths1[i] / 2, y + labelRowHeight / 2 + 2, { align: 'center' })
+          x += colWidths1[i]
+        }
+
+        // ---------- HEADER VALUE ROW 1 ----------
+        y += labelRowHeight
+        x = startX
+        const values1 = [product_description, cat_no, serial_no, manufacturing_date]
+        doc.setFont('helvetica', 'bold')
+
+        let descLines = doc.splitTextToSize(values1[0], colWidths1[0] - 4)
+        let descHeight = descLines.length * 5
+        let maxRowHeight = Math.max(descHeight, valueRowHeight)
+
+        for (let i = 0; i < values1.length; i++) {
+          doc.rect(x, y, colWidths1[i], maxRowHeight)
+          if (i === 0) {
+            let textY = y + 5
+            for (let j = 0; j < descLines.length; j++) {
+              doc.text(descLines[j], x + colWidths1[i] / 2, textY, { align: 'center' })
+              textY += 5
+            }
+          } else {
+            doc.text(values1[i], x + colWidths1[i] / 2, y + maxRowHeight / 2 + 3, { align: 'center' })
+          }
+          x += colWidths1[i]
+        }
+
+        // ---------- HEADER LABEL ROW 2 ----------
+        y += maxRowHeight // ✅ Move down by actual height
+        x = startX
+        const labels2 = ['PROJECT NAME', 'PROJECT NO.', 'TESTED BY', 'TESTER SIGNATURE / DATE']
+        doc.setFont('helvetica', 'normal')
+
+        for (let i = 0; i < labels2.length; i++) {
+          doc.rect(x, y, colWidths1[i], labelRowHeight)
+          doc.text(labels2[i], x + colWidths1[i] / 2, y + labelRowHeight / 2 + 2, { align: 'center' })
+          x += colWidths1[i]
+        }
+
+        // ---------- HEADER VALUE ROW 2 ----------
+        y += labelRowHeight
+        x = startX
+        const values2 = [project_name, project_no, customer_name, testedby1]
+        doc.setFont('helvetica', 'bold')
+
+        let descLines2 = doc.splitTextToSize(values2[0], colWidths1[0] - 4)
+        let descHeight2 = descLines2.length * 5
+        let maxRowHeight2 = Math.max(descHeight2, valueRowHeight)
+
+        for (let i = 0; i < values2.length; i++) {
+          doc.rect(x, y, colWidths1[i], maxRowHeight2)
+          if (i === 0) {
+            let textY = y + 5
+            for (let j = 0; j < descLines2.length; j++) {
+              doc.text(descLines2[j], x + colWidths1[i] / 2, textY, { align: 'center' })
+              textY += 5
+            }
+          } else {
+            doc.text(values2[i], x + colWidths1[i] / 2, y + maxRowHeight2 / 2 + 3, { align: 'center' })
+          }
+          x += colWidths1[i]
+        }
+        //====================================================
+
+
+        // === FOOTER ===
+        const footerTop = pageHeight - 41 // adjust for 6 rows
+        const footerCellHeight = 6
+        const footerColWidth = usableWidth / 3
+
+        const footerTitles = ['BILL OF MATERIAL No. / REV No.', 'G.A./Assembly Instruction No. / REV No.', 'TEST INSTRUCTION No. / REV No.']
+
+        const footerSections = ['MANUFACTURING', 'QUALITY CONTROL', 'CUSTOMER INSPECTION']
+        const instructionValues = [bill_of_material, ga_instruction, test_instruction]
+        const approvalValues = [manufacturing, quality_control_review, customer_inspection]
+        const dateValues = [date1, date2, date3]
+
+        //===================
+        for (let row = 0; row < 6; row++) {
+          for (let i = 0; i < 3; i++) {
+            const x = margin + i * footerColWidth
+            const y = footerTop + row * footerCellHeight
+
+            // Skip drawing the rectangle for the last row
+            if (row !== 5) {
+              doc.rect(x, y, footerColWidth, footerCellHeight)
+            }
+
+            doc.setFontSize(7)
+
+            if (row === 0) {
+              doc.setFont('helvetica', 'normal')
+              doc.text(footerTitles[i], x + 2, y + 4)
+            } else if (row === 1) {
+              doc.setFont('helvetica', 'bold')
+              doc.text(instructionValues[i], x + 2, y + 4)
+            } else if (row === 2) {
+              doc.setFont('helvetica', 'normal')
+              doc.text(footerSections[i], x + 2, y + 4)
+            } else if (row === 3) {
+              doc.setFont('helvetica', 'bold')
+              doc.text(approvalValues[i], x + 2, y + 4)
+            } else if (row === 4) {
+              doc.setFont('helvetica', 'normal')
+              doc.text('Date : ' + dateValues[i], x + 2, y + 4)
+            }
+          }
+        }
+
+        // Page Number
+        doc.setFontSize(7)
+        doc.setFont('helvetica', 'normal')
+        doc.text('Page ' + doc.internal.getCurrentPageInfo().pageNumber, pageWidth - 30, pageHeight - 7)
+        //=============================================================
+      }
+
+      //========= Common Functions =========//
+
+      function removeColumnsFromClonedTable(tableId, columnsToRemove = [0]) {
+        const originalTable = document.getElementById(tableId)
+        const clonedTable = originalTable.cloneNode(true)
+
+        Array.from(clonedTable.rows).forEach((row) => {
+          columnsToRemove.sort((a, b) => b - a) // Delete from highest index
+          for (let colIndex of columnsToRemove) {
+            if (row.cells[colIndex]) {
+              row.deleteCell(colIndex)
+            }
+          }
+        })
+
+        const tempDiv = document.createElement('div')
+        tempDiv.style.display = 'none'
+        tempDiv.appendChild(clonedTable)
+        document.body.appendChild(tempDiv)
+
+        return clonedTable
+      }
+
+      function getFailChannelsFromTableById(tableId) {
+        const table = document.getElementById(tableId)
+        const failChannels = []
+
+        for (let i = 1; i < table.rows.length; i++) {
+          const row = table.rows[i]
+          const channel = row.cells[1].innerText.trim()
+          const status = row.cells[5].innerText.trim().toUpperCase()
+          const statusH = row.cells[9]?.innerText.trim().toUpperCase()
+
+          if (status === 'FAIL' || statusH === 'FAIL') {
+            failChannels.push(channel)
+          }
+        }
+
+        return failChannels
+      }
+
+      function renderConclusion(doc, margin, y, failChannels, label) {
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(9)
+        doc.text('CONCLUSION-', margin + 4, y)
+
+        const baseText = failChannels.length > 0
+          ? `    Based on all above test results card found working not satisfactory. ${label}`
+          : `    Based on all above test results card found working satisfactory. ${label}`
+
+        const wrappedText = doc.splitTextToSize(baseText, 160)
+        doc.text(wrappedText, margin + 25, y + 5)
+      }
+
+      //========= Section 1: dg_input =========//
+      let clonedTable = removeColumnsFromClonedTable('dg_input', [0])
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(12)
+      doc.text('4-   DI TEST REPORT', margin + 6, margin + 53);
+      doc.autoTable({
+        html: clonedTable,
+        startY: margin + 55,
+        margin: {
+          top: margin + 53,
+          bottom: 50,
+          left: margin,
+          right: margin
+        },
+        theme: 'grid',
+        styles: {
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1
+        },
+        headStyles: {
+          fillColor: [255, 255, 255],
+          textColor: [0, 0, 0],
+          fontStyle: 'bold'
+        },
+        didDrawPage: function (data) {
+          addPageHeaderFooterDI(doc)
+        }
+      })
+
+      const failChannelsDI = getFailChannelsFromTableById('dg_input')
+      const resultY_DI = doc.lastAutoTable.finalY + 4
+      renderConclusion(doc, margin, resultY_DI, failChannelsDI, 'DI')
+
+
+
+
+      //========= Section 2: dg_output =========//
+      clonedTable = removeColumnsFromClonedTable('dg_output', [0])
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(12)
+      let finalY = doc.lastAutoTable.finalY || margin + 53;
+      doc.text('5-   DO TEST REPORT', margin + 6, finalY + 17);
+      doc.autoTable({
+        html: clonedTable,
+        startY: doc.lastAutoTable.finalY + 20,
+        margin: {
+          top: margin + 57,
+          bottom: 50,
+          left: margin,
+          right: margin
+        },
+        theme: 'grid',
+        styles: {
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1
+        },
+        headStyles: {
+          fillColor: [255, 255, 255],
+          textColor: [0, 0, 0],
+          fontStyle: 'bold'
+        },
+        didDrawPage: function (data) {
+          addPageHeaderFooterDI(doc)
+        }
+      })
+
+      const failChannelsDO = getFailChannelsFromTableById('dg_output')
+      const resultY_DO = doc.lastAutoTable.finalY + 10
+      renderConclusion(doc, margin, resultY_DO, failChannelsDO, 'DO')
+
+      //========= Section 3: an_input (NEW) =========//
+      clonedTable = removeColumnsFromClonedTable('an_input', [0])
+      doc.addPage()
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(12)
+      doc.text('6-   AI TEST REPORT', margin + 6, margin + 53);
+      doc.autoTable({
+        html: clonedTable,
+        startY: margin + 55,
+        margin: {
+          top: margin + 53,
+          bottom: 50,
+          left: margin,
+          right: margin
+        },
+        theme: 'grid',
+        styles: {
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1
+        },
+        headStyles: {
+          fillColor: [255, 255, 255], // white background
+          textColor: [0, 0, 0],       // black text
+          fontStyle: 'bold',           // optional: makes headers bold
+          fontSize: 7,
+          halign: 'center'
+        },
+        didDrawPage: function (data) {
+          addPageHeaderFooterDI(doc)
+        }
+      })
+
+      const failChannelsAI = getFailChannelsFromTableById('an_input')
+      const resultY_AI = doc.lastAutoTable.finalY + 10
+      renderConclusion(doc, margin, resultY_AI, failChannelsAI, 'AI')
+
+
+      // doc.save('DI_Test_Jig_Report.pdf')
+      doc.save(`MIXED_IO_${serial_no}.pdf`)
+
+    }
+  </script>
+
+
+  <div class="mainwrapper">
+    <form id="saveForm">
+      {% csrf_token %}
+      <!-- First Row -->
+      <div class="row">
+        <!-- Digital Input (204) -->
+        <div class="col">
+          <div id="loader" style="display: none;">
+            <p>Saving data... Please wait.</p>
+          </div>
+          <div class="data-grid-container">
+            <div class="data-grid-buttons">
+              <label>DIGITAL_INPUT(32)</label>
+
+              <button id="btnLow_DI" hidden>LOW</button>
+              <button id="btnHigh_DI" hidden>HIGH</button>
+              <button class="board" id="btnBoard_DI" type="button" data-bs-toggle="modal"
+                data-bs-target="#DI_Board_Model" hidden>Board Level Test</button>
+              <input type="checkbox" class="Check_btn" id="DI_Check" name="DI_Check" value="DI_Check"
+                style="transform: scale(3); margin-left: 25px; margin-right: 25px;" />
+            </div>
+            <div class="data-grid table1">
+              <table id="dg_input">
+                <thead>
+                  <tr>
+                    <th id="DI_SLN">SLN</th>
+                    <th id="DI_Channel">Channel No.</th>
+                    <th id="DI_Ref_Val">Simulated Value</th>
+                    <th id="DI_exp_val">Expected Value</th>
+                    <th id="DI_LnT_Val">Observed Value</th>
+                    <th id="DI_Status">Result</th>
+                    <th id="DI_Ref_Val_H">Simulated Value</th>
+                    <th id="DI_exp_val_H">Expected Value</th>
+                    <th id="DI_LnT_Val_H">Observed Value</th>
+                    <th id="DI_Status_H">Result</th>
+                    <th id="DI_Address">Address</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Table rows go here -->
+                </tbody>
+              </table>
+            </div>
+            <!-- Bootstrap Modal -->
+          </div>
+        </div>
+        <div class="modal fade" id="DI_Board_Model" tabindex="-1" aria-labelledby="DI_Board_ModelLabel"
+          aria-hidden="true">
+          <div class="modal-dialog modal-dialog-scrollable modal-lg" id="DI_Board_Model">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">MIXED IO Board Level Test</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <h2 style="text-align: center; margin: 5px 0; font-size: 24px; font-weight: bold;">Resistance test – VME
+                  Mixed IO Base Card</h2>
+
+                <!-- Form Container -->
+                <div class="container">
+                  <!-- Backplane Power Section -->
+                  <div class="section">
+                    <!-- <div class="section-title">Backplane Power</div> -->
+                    <table class="measurement-table">
+                      <tr>
+                        <th colspan="3">Backplane Power</th>
+                      </tr>
+                      <tr>
+                        <th></th>
+                        <th>Passing Value</th>
+                        <th>Measured Value</th>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>(+12V)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R13" style="width: 140px;" value=" >100 K Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R1" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(-12V)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R14" style="width: 140px;" value=" >100 K Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R2" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+5V)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R15" style="width: 140px;" value=" ~500 Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R3" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+3.3V)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R16" style="width: 140px;" value=" >100 k Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R4" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <!-- PMIC Power Section -->
+                  <div class="section">
+                    <!-- <div class="section-title">PMIC Power</div> -->
+                    <table class="measurement-table">
+                      <tr>
+                        <th colspan="3">PMIC Power & DC-DC Power</th>
+                      </tr>
+                      <tr>
+                        <th></th>
+                        <th>Passing Value</th>
+                        <th>Measured Value</th>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP38 (+3.3V_Flash)-TP18 (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R17" style="width: 140px;" value="~20 K Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R5" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP36 (+1.0V)- TP18 (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R18" style="width: 140px;" value="~330 Ohm " />
+                        </td>
+                        <td>
+                          <input type="text" id="R6" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP34 (+1.8V)-TP18 (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R19" style="width: 140px;" value=">3 K Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R7" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP21 (+5V)- TP18 (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R20" style="width: 140px;" value="~500 Ohm " />
+                        </td>
+                        <td>
+                          <input type="text" id="R8" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <!-- FIELD Power  Section -->
+                  <div class="section">
+                    <!-- <div class="section-title">PMIC Power</div> -->
+                    <table class="measurement-table">
+                      <tr>
+                        <th colspan="3">FIELD Power </th>
+                      </tr>
+                      <tr>
+                        <th></th>
+                        <th>Passing Value</th>
+                        <th>Measured Value</th>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP25 (+5V_FILED)-(F_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R21" style="width: 140px;" value="~560 Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R9" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP26 (+15V_FILED)-(F_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R22" style="width: 140px;" value="~116 K Ohm " />
+                        </td>
+                        <td>
+                          <input type="text" id="R10" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP27 (-15V_FILED)-(F_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R23" style="width: 140px;" value="~11.5 K Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R11" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP30 (+3.3V_FILED)-(F_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R24" style="width: 140px;" value="~370 Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R12" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                </div>
+
+                <!-- ====================================================================== -->
+
+                <h2 style="text-align: center; margin: 5px 0; font-size: 24px; font-weight: bold;">Resistance test – GP DO Daughter Card</h2>
+
+                <!-- Form Container -->
+                <div class="container">
+                  <!-- Backplane Power Section -->
+                  <div class="section">
+                    <!-- <div class="section-title">Backplane Power</div> -->
+                    <table class="measurement-table">
+                      <tr>
+                        <th></th>
+                        <th>Passing Value</th>
+                        <th>Measured Value</th>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>TP6 (+15V_FIELD)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R37" style="width: 140px;" value=" ~ 1 M Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R25" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP7 (-15V_FIELD)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R38" style="width: 140px;" value=" ~ 1 M Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R26" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP8 (+5V_FIELD)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R39" style="width: 140px;" value=" ~ 1 M Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R27" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP9 (+3.3V_FIELD)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R40" style="width: 140px;" value=" ~ 1 M Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R28" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- ======================================================================== -->
+
+                <h2 style="text-align: center; margin: 5px 0; font-size: 24px; font-weight: bold;">Resistance test – GP DI Daughter Card</h2>
+
+                <!-- Form Container -->
+                <div class="container">
+                  <!-- Backplane Power Section -->
+                  <div class="section">
+                    <!-- <div class="section-title">Backplane Power</div> -->
+                    <table class="measurement-table">
+                      <tr>
+                        <th></th>
+                        <th>Passing Value</th>
+                        <th>Measured Value</th>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>TP6 (+15V_FIELD)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R41" style="width: 140px;" value=" ~ 1 M Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R29" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP7 (-15V_FIELD)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R42" style="width: 140px;" value=" ~ 1 M Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R30" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP8 (+5V_FIELD)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R43" style="width: 140px;" value=" ~ 1 M Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R31" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP9 (+3.3V_FIELD)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R44" style="width: 140px;" value=" > 500 K Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R32" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- ======================================================================== -->
+
+                 <h2 style="text-align: center; margin: 5px 0; font-size: 24px; font-weight: bold;">Resistance test – GP AIO Daughter Card</h2>
+
+                <!-- Form Container -->
+                <div class="container">
+                  <!-- Backplane Power Section -->
+                  <div class="section">
+                    <!-- <div class="section-title">Backplane Power</div> -->
+                    <table class="measurement-table">
+                      <tr>
+                        <th></th>
+                        <th>Passing Value</th>
+                        <th>Measured Value</th>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>TP6 (+15V_FIELD)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R45" style="width: 140px;" value=" ~ 800 K Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R33" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP7 (-15V_FIELD)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R46" style="width: 140px;" value=" ~ 300 K Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R34" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP8 (+5V_FIELD)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R47" style="width: 140px;" value=" ~ 600 K Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R35" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP9 (+3.3V_FIELD)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="R48" style="width: 140px;" value=" ~ 400 K Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="R36" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+
+                 <!-- ======================================================================== -->
+
+                <h2 style="text-align: center; margin: 5px 0; font-size: 24px; font-weight: bold;">Voltage Test</h2>
+                <!-- <h2 class="section-title">Voltage Test</h2> -->
+
+                <!-- Form Container -->
+                <div class="container">
+                  <!-- Backplane Power Section -->
+                  <div class="section">
+                    <!-- <div class="section-title">PMIC & Peripherals Power</div> -->
+                    <table class="measurement-table">
+                      <tr>
+                        <th colspan="3">PMIC & Peripherals Power</th>
+                      </tr>
+                      <tr>
+                        <th></th>
+                        <th>Passing Range</th>
+                        <th>Measured Value</th>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP21 (+5V)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="V6" style="width: 140px;" value=" 4.85V _ 5.20V" />
+                        </td>
+                        <td>
+                          <input type="text" id="V1" style="width: 140px;" />Volts
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP22 (+3.3V)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="V7" style="width: 140px;" value=" 3.24V_3.38V" />
+                        </td>
+                        <td>
+                          <input type="text" id="V2" style="width: 140px;" />Volts
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP38 (+3.3V_Flash)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="V8" style="width: 140px;" value=" 3.24V - 3.38V" />
+                        </td>
+                        <td>
+                          <input type="text" id="V3" style="width: 140px;" />Volts
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP36 (+1.0V)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="V9" style="width: 140px;" value=" 0.997V _ 1.003V" />
+                        </td>
+                        <td>
+                          <input type="text" id="V4" style="width: 140px;" />Volts
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP34 (+1.8V)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="V10" style="width: 140px;" value=" 1.78V _ 1.82V" />
+                        </td>
+                        <td>
+                          <input type="text" id="V5" style="width: 140px;" />Volts
+                        </td>
+                      </tr>
+
+                      <input type="text" id="V11" style="visibility: hidden;" />
+                      <input type="text" id="V12" style="visibility: hidden;" />
+                    </table>
+
+                    <table class="measurement-table">
+                      <tr>
+                        <th colspan="3">Field Power</th>
+                      </tr>
+                      <tr>
+                        <th></th>
+                        <th>Passing Range</th>
+                        <th>Measured Value</th>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP16 - TP18 (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="V6" style="width: 140px;" value=" +11.85V _ +12.50V" />
+                        </td>
+                        <td>
+                          <input type="text" id="V1" style="width: 140px;" />Volts
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP17 - TP18 (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="V7" style="width: 140px;" value="-11.85V _ -12.50V" />
+                        </td>
+                        <td>
+                          <input type="text" id="V2" style="width: 140px;" />Volts
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP25 - P2.C1 (F_GND)</label>
+                        </td>
+                        <td>
+                          <input type="text" id="V8" style="width: 140px;" value=" +4.85V _ +5.20V  " />
+                        </td>
+                        <td>
+                          <input type="text" id="V3" style="width: 140px;" />Volts
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP26 - P2.C1 (F_GND)</label>
+                        </td>
+                        <td>
+                          <input type="text" id="V9" style="width: 140px;" value=" +14.85V _ +15.50V" />
+                        </td>
+                        <td>
+                          <input type="text" id="V4" style="width: 140px;" />Volts
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP27 - P2.C1 (F_GND)</label>
+                        </td>
+                        <td>
+                          <input type="text" id="V10" style="width: 140px;" value=" -14.85V _ -15.50V" />
+                        </td>
+                        <td>
+                          <input type="text" id="V5" style="width: 140px;" />Volts
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>TP30 - P2.C1 (F_GND)</label>
+                        </td>
+                        <td>
+                          <input type="text" id="V10" style="width: 140px;" value=" +3.24V _ +3.38V" />
+                        </td>
+                        <td>
+                          <input type="text" id="V5" style="width: 140px;" />Volts
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <h2 style="text-align: center; margin: 5px 0; font-size: 20px; font-weight: bold;">Fascia LED</h2>
+                  <div class="container">
+                    <table class="DI_dropdown_table">
+                      <tr>
+                        <td>
+                          <label>
+                            DEBUG1<br />
+                            <select name="select_26" id="select_26" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            DEBUG2<br />
+                            <select name="select_27" id="select_27" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            DEBUG3<br />
+                            <select name="select_28" id="select_28" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            DEBUG4<br />
+                            <select name="select_29" id="select_29" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>
+                            +3.3V<br />
+                            <select name="select_30" id="select_30" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            +5.0V<br />
+                            <select name="select_31" id="select_31" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            -12V<br />
+                            <select name="select_32" id="select_32" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            +12V<br />
+                            <select name="select_33" id="select_33" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>
+                            +1.8V<br />
+                            <select name="select_34" id="select_34" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            +1.0V<br />
+                            <select name="select_35" id="select_35" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            DONE<br />
+                            <select name="select_36" id="select_36" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            CARD ACTIVE<br />
+                            <select name="select_37" id="select_37" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>
+                            DAUGHTER 3<br />
+                            <select name="select_38" id="select_38" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            DAUGHTER 2<br />
+                            <select name="select_39" id="select_39" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            DAUGHTER 1<br />
+                            <select name="select_40" id="select_40" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            NA<br />
+                            <select name="select_41" id="select_41" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>
+                            +3.3V_FIELD<br />
+                            <select name="select_42" id="select_42" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            +5V_FIELD<br />
+                            <select name="select_43" id="select_43" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            -15V_FIELD<br />
+                            <select name="select_44" id="select_44" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                        <td>
+                          <label>
+                            +15V_FIELD<br />
+                            <select name="select_45" id="select_45" style="width:80px; height:35px;">
+                              <option value="OFF">OFF</option>
+                              <option value="ON">ON</option>
+                              <option value="Blinking">Blinking</option>
+                            </select>
+                          </label>
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <div id="DI_tempValues" style="display:none;">
+                    <input type="hidden" id="DI_saved_R1" name="DI_saved_R1" />
+                    <input type="hidden" id="DI_saved_R2" name="DI_saved_R2" />
+                    <input type="hidden" id="DI_saved_R3" name="DI_saved_R3" />
+                    <input type="hidden" id="DI_saved_R4" name="DI_saved_R4" />
+                    <input type="hidden" id="DI_saved_R5" name="DI_saved_R5" />
+                    <input type="hidden" id="DI_saved_R6" name="DI_saved_R6" />
+                    <input type="hidden" id="DI_saved_R7" name="DI_saved_R7" />
+                    <input type="hidden" id="DI_saved_R8" name="DI_saved_R8" />
+                    <input type="hidden" id="DI_saved_R9" name="DI_saved_R9" />
+                    <input type="hidden" id="DI_saved_R10" name="DI_saved_R10" />
+                    <input type="hidden" id="DI_saved_R11" name="DI_saved_R11" />
+                    <input type="hidden" id="DI_saved_R12" name="DI_saved_R12" />
+                    <input type="hidden" id="DI_saved_R13" name="DI_saved_R13" />
+                    <input type="hidden" id="DI_saved_R14" name="DI_saved_R14" />
+                    <input type="hidden" id="DI_saved_R15" name="DI_saved_R15" />
+                    <input type="hidden" id="DI_saved_R16" name="DI_saved_R16" />
+                    <input type="hidden" id="DI_saved_R17" name="DI_saved_R17" />
+                    <input type="hidden" id="DI_saved_R18" name="DI_saved_R18" />
+                    <input type="hidden" id="DI_saved_R19" name="DI_saved_R19" />
+                    <input type="hidden" id="DI_saved_R20" name="DI_saved_R20" />
+                    <input type="hidden" id="DI_saved_R21" name="DI_saved_R21" />
+                    <input type="hidden" id="DI_saved_R22" name="DI_saved_R22" />
+                    <input type="hidden" id="DI_saved_R23" name="DI_saved_R23" />
+                    <input type="hidden" id="DI_saved_R24" name="DI_saved_R24" />
+                    <input type="hidden" id="DI_saved_R25" name="DI_saved_R25" />
+                    <input type="hidden" id="DI_saved_R26" name="DI_saved_R26" />
+                    <input type="hidden" id="DI_saved_R27" name="DI_saved_R27" />
+                    <input type="hidden" id="DI_saved_R28" name="DI_saved_R28" />
+                    <input type="hidden" id="DI_saved_R29" name="DI_saved_R29" />
+                    <input type="hidden" id="DI_saved_R30" name="DI_saved_R30" />
+                    <input type="hidden" id="DI_saved_R31" name="DI_saved_R31" />
+                    <input type="hidden" id="DI_saved_R32" name="DI_saved_R32" />
+                    <input type="hidden" id="DI_saved_R33" name="DI_saved_R33" />
+                    <input type="hidden" id="DI_saved_R34" name="DI_saved_R34" />
+                    <input type="hidden" id="DI_saved_R35" name="DI_saved_R35" />
+                    <input type="hidden" id="DI_saved_R36" name="DI_saved_R36" />
+                    <input type="hidden" id="DI_saved_R37" name="DI_saved_R37" />
+                    <input type="hidden" id="DI_saved_R38" name="DI_saved_R38" />
+                    <input type="hidden" id="DI_saved_R39" name="DI_saved_R39" />
+                    <input type="hidden" id="DI_saved_R40" name="DI_saved_R40" />
+                    <input type="hidden" id="DI_saved_R41" name="DI_saved_R41" />
+                    <input type="hidden" id="DI_saved_R42" name="DI_saved_R42" />
+                    <input type="hidden" id="DI_saved_R43" name="DI_saved_R43" />
+                    <input type="hidden" id="DI_saved_R44" name="DI_saved_R44" />
+                    <input type="hidden" id="DI_saved_R45" name="DI_saved_R45" />
+                    <input type="hidden" id="DI_saved_R46" name="DI_saved_R46" />
+                    <input type="hidden" id="DI_saved_R47" name="DI_saved_R47" />
+                    <input type="hidden" id="DI_saved_R48" name="DI_saved_R48" />
+
+
+                    <input type="hidden" id="DI_saved_V1" name="DI_saved_V1" />
+                    <input type="hidden" id="DI_saved_V2" name="DI_saved_V2" />
+                    <input type="hidden" id="DI_saved_V3" name="DI_saved_V3" />
+                    <input type="hidden" id="DI_saved_V4" name="DI_saved_V4" />
+                    <input type="hidden" id="DI_saved_V5" name="DI_saved_V5" />
+                    <input type="hidden" id="DI_saved_V6" name="DI_saved_V6" />
+                    <input type="hidden" id="DI_saved_V7" name="DI_saved_V7" />
+                    <input type="hidden" id="DI_saved_V8" name="DI_saved_V8" />
+                    <input type="hidden" id="DI_saved_V9" name="DI_saved_V9" />
+                    <input type="hidden" id="DI_saved_V10" name="DI_saved_V10" />
+                    <input type="hidden" id="DI_saved_V11" name="DI_saved_V11" />
+                    <input type="hidden" id="DI_saved_V12" name="DI_saved_V12" />
+
+                    <input type="hidden" id="DI_saved_26" name="DI_saved_26" />
+                    <input type="hidden" id="DI_saved_27" name="DI_saved_27" />
+                    <input type="hidden" id="DI_saved_28" name="DI_saved_28" />
+                    <input type="hidden" id="DI_saved_29" name="DI_saved_29" />
+                    <input type="hidden" id="DI_saved_30" name="DI_saved_30" />
+
+                    <input type="hidden" id="DI_saved_31" name="DI_saved_31" />
+                    <input type="hidden" id="DI_saved_32" name="DI_saved_32" />
+                    <input type="hidden" id="DI_saved_33" name="DI_saved_33" />
+                    <input type="hidden" id="DI_saved_34" name="DI_saved_34" />
+                    <input type="hidden" id="DI_saved_35" name="DI_saved_35" />
+                    <input type="hidden" id="DI_saved_36" name="DI_saved_36" />
+                    <input type="hidden" id="DI_saved_37" name="DI_saved_37" />
+                    <input type="hidden" id="DI_saved_38" name="DI_saved_38" />
+                    <input type="hidden" id="DI_saved_39" name="DI_saved_39" />
+                    <input type="hidden" id="DI_saved_40" name="DI_saved_40" />
+                    <input type="hidden" id="DI_saved_41" name="DI_saved_41" />
+                    <input type="hidden" id="DI_saved_42" name="DI_saved_42" />
+                    <input type="hidden" id="DI_saved_43" name="DI_saved_43" />
+                    <input type="hidden" id="DI_saved_44" name="DI_saved_44" />
+                    <input type="hidden" id="DI_saved_45" name="DI_saved_45" />
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" id="DI_saveInputs" class="btn btn-primary">Save</button>
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="DI_tempValues" style="display: none;"></div>
+          <script>
+            document.getElementById('DI_saveInputs').addEventListener('click', function () {
+              // Save resistance and voltage inputs
+              const ids = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10',
+                            'R11', 'R12', 'R13', 'R14', 'R15', 'R16', 'R17', 'R18', 'R19', 'R20',
+                            'R21', 'R22', 'R23', 'R24', 'R25', 'R26', 'R27', 'R28', 'R29', 'R30',
+                            'R31', 'R32', 'R33', 'R34', 'R35', 'R36', 'R37', 'R38', 'R39', 'R40',
+                            'R41', 'R42', 'R43', 'R44', 'R45', 'R46', 'R47', 'R48',
+                            'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12']
+
+              ids.forEach((id) => {
+                document.getElementById('DI_saved_' + id).value = document.getElementById(id).value
+              })
+              //   document.querySelectorAll(".DI_checkbox_table input[type='checkbox']").forEach((checkbox) => {
+              //     const checkboxId = checkbox.id // e.g., checkbox_26
+              //     const number = checkboxId.split('_')[1] // get "26"
+              //     const hiddenId = 'DI_saved_' + number
+
+              //     let input = document.getElementById(hiddenId)
+              //     if (!input) {
+              //       input = document.createElement('input')
+              //       input.type = 'hidden'
+              //       input.id = hiddenId
+              //       input.name = hiddenId
+              //       DI_tempContainer.appendChild(input)
+              //     }
+              //     input.value = checkbox.checked ? 'on' : 'off'
+              //   })
+              //   const formData = new FormData()
+              //   document.querySelectorAll('#DI_tempValues input').forEach((input) => {
+              //     formData.append(input.id, input.value)
+              //   })
+              //   document.getElementById('btnLow_DI').hidden = false
+              //   document.getElementById('btnHigh_DI').hidden = false
+
+              //   document.getElementById('btnLow_DO').hidden = false
+              //   document.getElementById('btnHigh_DO').hidden = false
+
+              //   document.getElementById('btn_AI_N_10').hidden = false
+              //   document.getElementById('btn_AI_0').hidden = false
+              //   document.getElementById('btn_AI_P_10').hidden = false
+              //   document.getElementById('btnBoard_AIO').hidden = true
+
+              //   document.getElementById('btn_AO_N_10').hidden = false
+              //   document.getElementById('btn_AO_0').hidden = false
+              //   document.getElementById('btn_AO_P_10').hidden = false
+
+              //   document.getElementById('DO_Check').hidden = true
+              //   document.getElementById('AI_Check').hidden = true
+
+
+              //   const modal = bootstrap.Modal.getInstance(document.getElementById('DI_Board_Model'))
+              //   modal.hide()
+              // })
+
+              // ✅ Replace checkbox handling with dropdown (select) handling
+              document.querySelectorAll(".DI_dropdown_table select").forEach((dropdown) => {
+                const dropdownId = dropdown.id; // e.g., dropdown_26
+                const number = dropdownId.split('_')[1]; // get "26"
+                const hiddenId = 'DI_saved_' + number;
+
+                let input = document.getElementById(hiddenId);
+                if (!input) {
+                  input = document.createElement('input');
+                  input.type = 'hidden';
+                  input.id = hiddenId;
+                  input.name = hiddenId;
+                  DI_tempContainer.appendChild(input);
+                }
+
+                input.value = dropdown.value; // e.g., OFF, ON, BLINKING
+              });
+
+              // Keep your existing logic
+              const formData = new FormData();
+              document.querySelectorAll('#DI_tempValues input').forEach((input) => {
+                formData.append(input.id, input.value);
+              });
+
+              document.getElementById('btnLow_DI').hidden = false;
+              document.getElementById('btnHigh_DI').hidden = false;
+
+              document.getElementById('btnLow_DO').hidden = false;
+              document.getElementById('btnHigh_DO').hidden = false;
+
+              document.getElementById('btn_AI_N_10').hidden = false;
+              document.getElementById('btn_AI_0').hidden = false;
+              document.getElementById('btn_AI_P_10').hidden = false;
+              document.getElementById('btnBoard_AIO').hidden = true;
+
+              document.getElementById('btn_AO_N_10').hidden = true;
+              document.getElementById('btn_AO_0').hidden = true;
+              document.getElementById('btn_AO_P_10').hidden = true;
+
+              document.getElementById('DO_Check').hidden = true;
+              document.getElementById('AI_Check').hidden = true;
+
+              const modal = bootstrap.Modal.getInstance(document.getElementById('DI_Board_Model'));
+              modal.hide();
+            });
+
+
+          </script>
+        </div>
+        <!-- ======================= -->
+        <!-- DO Details -->
+
+        <!-- Digital Output (94) -->
+        <div class="col">
+          <div class="data-grid-container">
+            <div class="data-grid-buttons">
+              <label>DIGITAL_OUTPUT(28)</label>
+              <button id="btnLow_DO" hidden>LOW</button>
+              <button id="btnHigh_DO" hidden>HIGH</button>
+              <button class="board" id="btnBoard_DO" type="button" data-bs-toggle="modal"
+                data-bs-target="#DO_Board_Model" hidden>Board Level Test</button>
+              <input type="checkbox" class="Check_btn" id="DO_Check" name="DO_Check" value="DO_Check"
+                style="display: none;" />
+            </div>
+            <div class="data-grid table1">
+              <table id="dg_output">
+                <thead>
+                  <tr>
+                    <th id="DO_SLN">SLN</th>
+                    <th id="DO_Channel">Channel No.</th>
+                    <th id="DO_LnT_Val">Simulated Value</th>
+                    <th id="DO_exp_val">Expected Value</th>
+                    <th id="DO_Ref_Val">Observed Value</th>
+                    <th id="DO_Status">Result</th>
+                    <th id="DO_LnT_Val_H">Simulated Value</th>
+                    <th id="DO_exp_val_H">Expected Value</th>
+                    <th id="DO_Ref_Val_H">Observed Value</th>
+                    <th id="DO_Status_H">Result</th>
+                    <th id="DO_Address">Address</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Table rows go here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal fade" id="DO_Board_Model" tabindex="-1" aria-labelledby="DO_Board_ModelLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-lg" id="DO_Board_Model">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">DO Board Level Test</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <h2 style="text-align: center; margin: 5px 0; font-size: 20px; font-weight: bold;">Resistance Test:
+                  </h2>
+
+                  <!-- Form Container -->
+                  <div class="container">
+                    <!-- Backplane Power Section -->
+                    <div class="section">
+                      <table class="measurement-table">
+                        <tr>
+                          <th colspan="3">Backplane Power</th>
+                        </tr>
+                        <tr>
+                          <th></th>
+                          <th>Passing Value</th>
+                          <th>Measured Value</th>
+                        </tr>
+
+                        <tr>
+                          <td>
+                            <label>(+12V)-(GND):</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R12" name="DO_R12" style="width: 140px;" value=" >500 K Ohm " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R1" name="DO_R1" style="width: 140px;" />Ohm
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>(-12V)-(GND):</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R13" name="DO_R13" style="width: 140px;" value=" >100 K Ohm " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R2" name="DO_R2" style="width: 140px;" />Ohm
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>(+5V)-(GND):</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R14" name="DO_R14" style="width: 140px;" value=" >10 K Ohm" />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R3" name="DO_R3" style="width: 140px;" />Ohm
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>(+3.3V)-(GND):</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R15" name="DO_R15" style="width: 140px;" value=" >100 K Ohm" />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R4" name="DO_R4" style="width: 140px;" />Ohm
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+
+                    <!-- PMIC Power Section -->
+                    <div class="section">
+                      <table class="measurement-table">
+                        <tr>
+                          <th colspan="3">PMIC Power</th>
+                        </tr>
+                        <tr>
+                          <th></th>
+                          <th>Passing Value</th>
+                          <th>Measured Value</th>
+                        </tr>
+
+                        <tr>
+                          <td>
+                            <label>(+3.3V_Flash)-TP3 (GND):</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R16" name="DO_R16" style="width: 140px;"
+                              value=" 7K Ohm to 8K Ohm " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R5" name="DO_R5" style="width: 140px;" />Ohm
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>(+1.0V)-TP3 (GND):</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R17" name="DO_R17" style="width: 140px;"
+                              value=" 350 Ohm to 600 Ohm " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R6" name="DO_R6" style="width: 140px;" />Ohm
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>(+1.8V)-TP3 (GND):</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R18" name="DO_R18" style="width: 140px;" value=" >3 K Ohm " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R7" name="DO_R7" style="width: 140px;" />Ohm
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+
+                    <!-- Isolated Field Power Section -->
+                    <div class="section">
+                      <table class="measurement-table">
+                        <tr>
+                          <th colspan="3">Isolated Field Power</th>
+                        </tr>
+                        <tr>
+                          <th></th>
+                          <th>Passing Value</th>
+                          <th>Measured Value</th>
+                        </tr>
+
+                        <tr>
+                          <td>
+                            <label>TP23 (+3.3V_FILED1)-(F_DGND1):</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R19" name="DO_R19" style="width: 140px;" value=" ~2K Ohm " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R8" name="DO_R8" style="width: 120px;" />Ohm
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>TP25 (+3.3V_FILED2)-(F_DGND2):</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R20" name="DO_R20" style="width: 140px;" value=" ~2K Ohm " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R9" name="DO_R9" style="width: 120px;" />Ohm
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>TP24 (+3.3V_FILED3)-(F_DGND3)</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R21" name="DO_R21" style="width: 140px;" value=" ~2K Ohm " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R10" name="DO_R10" style="width: 120px;" />Ohm
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>TP26 (+3.3V_FILED4)-(F_DGND4)</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R22" name="DO_R22" style="width: 140px;" value=" ~2K Ohm " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_R11" name="DO_R11" style="width: 120px;" />Ohm
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                  </div>
+
+                  <h2 style="text-align: center; margin: 5px 0; font-size: 20px; font-weight: bold;">Voltage Test</h2>
+
+                  <!-- Voltage Test -->
+                  <div class="container">
+                    <div class="section">
+                      <table class="measurement-table">
+                        <tr>
+                          <th colspan="3">PMIC & Peripherals Power</th>
+                        </tr>
+                        <tr>
+                          <th></th>
+                          <th>Passing Value</th>
+                          <th>Measured Value</th>
+                        </tr>
+
+                        <tr>
+                          <td>
+                            <label>TP2 (+5V)</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V11" name="DO_V11" style="width: 140px;"
+                              value=" 4.85V - 5.20V " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V1" name="DO_V1" style="width: 140px;" />V
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>TP15 (+3.3V)</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V12" name="DO_V12" style="width: 140px;"
+                              value=" 3.24V - 3.38V " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V2" name="DO_V2" style="width: 140px;" />V
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>TP20 (+3.3V_Flash)</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V13" name="DO_V13" style="width: 140px;"
+                              value=" 3.24V - 3.38V " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V3" name="DO_V3" style="width: 140px;" />V
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>TP18 (+1.0V)</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V14" name="DO_V14" style="width: 140px;"
+                              value=" 0.997V - 1.003V " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V4" name="DO_V4" style="width: 140px;" />V
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>TP16 (+1.8V)</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V15" name="DO_V15" style="width: 140px;"
+                              value=" 1.78V - 1.82V " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V5" name="DO_V5" style="width: 140px;" />V
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+
+                    <div class="section">
+                      <table class="measurement-table">
+                        <tr>
+                          <th colspan="3">Isolated Field Power</th>
+                        </tr>
+                        <tr>
+                          <th></th>
+                          <th>Passing Value</th>
+                          <th>Measured Value</th>
+                        </tr>
+
+                        <tr>
+                          <td>
+                            <label>TP27 (+12V)-(GND)</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V16" name="DO_V16" style="width: 140px;"
+                              value=" 11.85V - 12.50V" />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V6" name="DO_V6" style="width: 140px;" />V
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>TP23 (+3.3V_FILED1)-(F_DGND1)</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V17" name="DO_V17" style="width: 140px;"
+                              value=" 3.24V - 3.38V " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V7" name="DO_V7" style="width: 140px;" />V
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>TP25 (+3.3V_FILED2)-(F_DGND2)</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V18" name="DO_V18" style="width: 140px;"
+                              value=" 3.24V - 3.38V " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V8" name="DO_V8" style="width: 140px;" />V
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>TP24 (+3.3V_FILED3)-(F_DGND3)</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V19" name="DO_V19" style="width: 140px;"
+                              value=" 3.24V - 3.38V " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V9" name="DO_V9" style="width: 140px;" />V
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label>TP26 (+3.3V_FILED4)(F_DGND4)</label>
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V20" name="DO_V20" style="width: 140px;"
+                              value=" 3.24V - 3.38V " />
+                          </td>
+                          <td>
+                            <input type="text" id="DO_V10" name="DO_V10" style="width: 140px;" />V
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                  </div>
+
+                  <h2 style="text-align: center; margin: 5px 0; font-size: 20px; font-weight: bold;">Fascia LED</h2>
+                  <div class="container">
+                    <table class="DO_checkbox_table">
+                      <tr>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_26" id="DO_checkbox_26"
+                              style="width:35px; height:35px;" /><br />DEBUG1</label>
+                        </td>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_27" id="DO_checkbox_27"
+                              style="width:35px; height:35px;" /><br />DEBUG2</label>
+                        </td>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_28" id="DO_checkbox_28"
+                              style="width:35px; height:35px;" /><br />+1.0V</label>
+                        </td>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_29" id="DO_checkbox_29"
+                              style="width:35px; height:35px;" /><br />+1.8V</label>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_30" id="DO_checkbox_30"
+                              style="width:35px; height:35px;" /><br />CARD_ACTIVE</label>
+                        </td>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_31" id="DO_checkbox_31"
+                              style="width:35px; height:35px;" /><br />DONE</label>
+                        </td>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_32" id="DO_checkbox_32"
+                              style="width:35px; height:35px;" /><br /> Spare1</label>
+                        </td>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_33" id="DO_checkbox_33"
+                              style="width:35px; height:35px;" /><br /> Spare2</label>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_34" id="DO_checkbox_34"
+                              style="width:35px; height:35px;" /><br />+12V</label>
+                        </td>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_35" id="DO_checkbox_35"
+                              style="width:35px; height:35px;" /><br />-12V</label>
+                        </td>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_36" id="DO_checkbox_36"
+                              style="width:35px; height:35px;" /><br />+5V</label>
+                        </td>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_37" id="DO_checkbox_37"
+                              style="width:35px; height:35px;" /><br />+3.3V</label>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_38" id="DO_checkbox_38"
+                              style="width:35px; height:35px;" /><br />+CHOK1-24</label>
+                        </td>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_39" id="DO_checkbox_39"
+                              style="width:35px; height:35px;" /><br />CHOK25-48</label>
+                        </td>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_40" id="DO_checkbox_40"
+                              style="width:35px; height:35px;" /><br />CHOK49-72</label>
+                        </td>
+                        <td>
+                          <label><input type="checkbox" name="DO_checkbox_41" id="DO_checkbox_41"
+                              style="width:35px; height:35px;" /><br />CHOK73-94</label>
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <div id="DO_tempValues" style="display:none;">
+                    <input type="hidden" id="DO_saved_R1" name="DO_saved_R1" />
+                    <input type="hidden" id="DO_saved_R2" name="DO_saved_R2" />
+                    <input type="hidden" id="DO_saved_R3" name="DO_saved_R3" />
+                    <input type="hidden" id="DO_saved_R4" name="DO_saved_R4" />
+                    <input type="hidden" id="DO_saved_R5" name="DO_saved_R5" />
+                    <input type="hidden" id="DO_saved_R6" name="DO_saved_R6" />
+                    <input type="hidden" id="DO_saved_R7" name="DO_saved_R7" />
+                    <input type="hidden" id="DO_saved_R8" name="DO_saved_R8" />
+                    <input type="hidden" id="DO_saved_R9" name="DO_saved_R9" />
+                    <input type="hidden" id="DO_saved_R10" name="DO_saved_R10" />
+                    <input type="hidden" id="DO_saved_R11" name="DO_saved_R11" />
+                    <input type="hidden" id="DO_saved_R12" name="DO_saved_R12" />
+                    <input type="hidden" id="DO_saved_R13" name="DO_saved_R13" />
+                    <input type="hidden" id="DO_saved_R14" name="DO_saved_R14" />
+                    <input type="hidden" id="DO_saved_R15" name="DO_saved_R15" />
+                    <input type="hidden" id="DO_saved_R16" name="DO_saved_R16" />
+                    <input type="hidden" id="DO_saved_R17" name="DO_saved_R17" />
+                    <input type="hidden" id="DO_saved_R18" name="DO_saved_R18" />
+                    <input type="hidden" id="DO_saved_R19" name="DO_saved_R19" />
+                    <input type="hidden" id="DO_saved_R20" name="DO_saved_R20" />
+                    <input type="hidden" id="DO_saved_R21" name="DO_saved_R21" />
+                    <input type="hidden" id="DO_saved_R22" name="DO_saved_R22" />
+
+                    <input type="hidden" id="DO_saved_V1" name="DO_saved_V1" />
+                    <input type="hidden" id="DO_saved_V2" name="DO_saved_V2" />
+                    <input type="hidden" id="DO_saved_V3" name="DO_saved_V3" />
+                    <input type="hidden" id="DO_saved_V4" name="DO_saved_V4" />
+                    <input type="hidden" id="DO_saved_V5" name="DO_saved_V5" />
+                    <input type="hidden" id="DO_saved_V6" name="DO_saved_V6" />
+                    <input type="hidden" id="DO_saved_V7" name="DO_saved_V7" />
+                    <input type="hidden" id="DO_saved_V8" name="DO_saved_V8" />
+                    <input type="hidden" id="DO_saved_V9" name="DO_saved_V9" />
+                    <input type="hidden" id="DO_saved_V10" name="DO_saved_V10" />
+                    <input type="hidden" id="DO_saved_V11" name="DO_saved_V11" />
+                    <input type="hidden" id="DO_saved_V12" name="DO_saved_V12" />
+                    <input type="hidden" id="DO_saved_V13" name="DO_saved_V13" />
+                    <input type="hidden" id="DO_saved_V14" name="DO_saved_V14" />
+                    <input type="hidden" id="DO_saved_V15" name="DO_saved_V15" />
+                    <input type="hidden" id="DO_saved_V16" name="DO_saved_V16" />
+                    <input type="hidden" id="DO_saved_V17" name="DO_saved_V17" />
+                    <input type="hidden" id="DO_saved_V18" name="DO_saved_V18" />
+                    <input type="hidden" id="DO_saved_V19" name="DO_saved_V19" />
+                    <input type="hidden" id="DO_saved_V20" name="DO_saved_V20" />
+
+                    <input type="hidden" id="DO_saved_26" name="DO_saved_26" />
+                    <input type="hidden" id="DO_saved_27" name="DO_saved_27" />
+                    <input type="hidden" id="DO_saved_28" name="DO_saved_28" />
+                    <input type="hidden" id="DO_saved_29" name="DO_saved_29" />
+                    <input type="hidden" id="DO_saved_30" name="DO_saved_30" />
+                    <input type="hidden" id="DO_saved_31" name="DO_saved_31" />
+                    <input type="hidden" id="DO_saved_32" name="DO_saved_32" />
+                    <input type="hidden" id="DO_saved_33" name="DO_saved_33" />
+                    <input type="hidden" id="DO_saved_34" name="DO_saved_34" />
+                    <input type="hidden" id="DO_saved_35" name="DO_saved_35" />
+                    <input type="hidden" id="DO_saved_36" name="DO_saved_36" />
+                    <input type="hidden" id="DO_saved_37" name="DO_saved_37" />
+                    <input type="hidden" id="DO_saved_38" name="DO_saved_38" />
+                    <input type="hidden" id="DO_saved_39" name="DO_saved_39" />
+                    <input type="hidden" id="DO_saved_40" name="DO_saved_40" />
+                    <input type="hidden" id="DO_saved_41" name="DO_saved_41" />
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" id="DO_saveInputs" class="btn btn-primary">Save</button>
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="DO_tempValues" style="display: none;"></div>
+          <script>
+            document.getElementById('DO_saveInputs').addEventListener('click', function () {
+              // Save resistance and voltage inputs
+              const ids = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15', 'R16', 'R17', 'R18', 'R19', 'R20', 'R21', 'R22', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20']
+
+              ids.forEach((id) => {
+                document.getElementById('DO_saved_' + id).value = document.getElementById('DO_' + id).value
+              })
+              document.querySelectorAll(".DO_checkbox_table input[type='checkbox']").forEach((checkbox) => {
+                const checkboxId = checkbox.id // e.g., checkbox_26
+                const number = checkboxId.split('_')[1] // get "26"
+                const hiddenId = 'DO_saved_' + number
+                const DO_tempContainer = document.getElementById('DO_tempValues')
+                let input = document.getElementById(hiddenId)
+                if (!input) {
+                  input = document.createElement('input')
+                  input.type = 'hidden'
+                  input.id = hiddenId
+                  input.name = hiddenId
+                  // alert()
+                  DO_tempContainer.appendChild(input)
+                }
+                input.value = checkbox.checked ? 'on' : 'off'
+              })
+              const formData = new FormData()
+              document.querySelectorAll('#DO_tempValues input').forEach((input) => {
+                formData.append(input.id, input.value)
+              })
+              document.getElementById('btnLow_DO').hidden = false
+              document.getElementById('btnHigh_DO').hidden = false
+              const modal = bootstrap.Modal.getInstance(document.getElementById('DO_Board_Model'))
+              modal.hide()
+            })
+          </script>
+        </div>
+        <!-- ======================= -->
+      </div>
+
+      <!-- Second Row -->
+      <div class="row">
+        <!-- Analog Input (48) -->
+        <div class="col">
+          <div class="data-grid-container">
+            <div class="data-grid-buttons">
+              <label style="text-align: left;">ANALOG_INPUT(12)</label>
+              <button id="btn_AI_N_10" hidden>-10V</button>
+              <button id="btn_AI_0" hidden>0V</button>
+              <button id="btn_AI_P_10" hidden>+10V</button>
+              <button class="board" id="btnBoard_AIO" type="button" data-bs-toggle="modal"
+                data-bs-target="#AIO_Board_Model" hidden>Board Level Test</button>
+
+              <input type="checkbox" class="Check_btn" id="AI_Check" name="AI_Check" value="AI_Check"
+                style="display: none;" />
+            </div>
+            <div class="data-grid table1">
+              <table id="an_input">
+                <thead>
+                  <tr>
+                    <th id="AI_SLN">SLN</th>
+                    <th id="AI_Channel">Channel No.</th>
+                    <th id="AI_Ref_Val_N_10">Simulated Value</th>
+                    <th id="AI_exp_val_N_10" style="line-height: 1.1;">Expected Value<br>(±50mV)</th>
+                    <th id="AI_LnT_Val_N_10">Observed Value</th>
+                    <th id="AI_Status_N_10">Result</th>
+
+                    <th id="AI_Ref_Val">Simulated Value</th>
+                    <th id="AI_exp_val" style="line-height: 1.1;">Expected Value<br>(±50mV)</th>
+                    <th id="AI_LnT_Val">Observed Value</th>
+                    <th id="AI_Status">Result</th>
+
+                    <th id="AI_Ref_Val_P_10">Simulated Value</th>
+                    <th id="AI_exp_val_P_10" style="line-height: 1.1;">Expected Value<br>(±50mV)</th>
+                    <th id="AI_LnT_Val_P_10">Observed Value</th>
+
+                    <th id="AI_Status_P_10">Result</th>
+                    <th id="AI_Address">Address</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Table rows go here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="AIO_Board_Model" tabindex="-1" aria-labelledby="AIO_Board_ModelLabel"
+          aria-hidden="true">
+          <div class="modal-dialog modal-dialog-scrollable modal-lg" id="AIO_Board_Model">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">AIO Board Level Test</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <h2 style="text-align: center; margin: 5px 0; font-size: 20px; font-weight: bold;">Resistance Test:</h2>
+                <div class="container">
+                  <div class="section">
+                    <table class="measurement-table">
+                      <tr>
+                        <th colspan="3">Backplane Power</th>
+                      </tr>
+                      <tr>
+                        <th></th>
+                        <th>Passing Value</th>
+                        <th>Measured Value</th>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>+12V-GND:</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R14" name="AIO_R14" style="width: 140px;" value=" >500 K Ohm " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R1" name="AIO_R1" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(-12V)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R15" name="AIO_R15" style="width: 140px;" value=" >100 K Ohm " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R2" name="AIO_R2" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+5V)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R16" name="AIO_R16" style="width: 140px;" value=" >10 K Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R3" name="AIO_R3" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+3.3V)-(GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R17" name="AIO_R17" style="width: 140px;"
+                            value=" ~ 600 Ohm ±20% " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R4" name="AIO_R4" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <div class="section">
+                    <table class="measurement-table">
+                      <tr>
+                        <th colspan="3">PMIC Power</th>
+                      </tr>
+                      <tr>
+                        <th></th>
+                        <th>Passing Value</th>
+                        <th>Measured Value</th>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>(+3.3V_Flash) - TP3 (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R18" name="AIO_R18" style="width: 140px;"
+                            value=" ~20 K Ohm ±20% " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R5" name="AIO_R5" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+1.0V) - TP3 (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R19" name="AIO_R19" style="width: 140px;"
+                            value=" ~350 Ohm ±20% " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R6" name="AIO_R6" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+1.8V) - TP3 (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R20" name="AIO_R20" style="width: 140px;" value=" >3 K Ohm" />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R7" name="AIO_R7" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <div class="section">
+                    <table class="measurement-table">
+                      <tr>
+                        <th colspan="3">Isolated Field Power</th>
+                      </tr>
+                      <tr>
+                        <th></th>
+                        <th>Passing Value</th>
+                        <th>Measured Value</th>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>(+5.0V_FIELD) - (FIELD_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R21" name="AIO_R21" style="width: 140px;" value=" >500 K Ohm " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R8" name="AIO_R8" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+15V_FIELD) - (FIELD_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R22" name="AIO_R22" style="width: 140px;" value=" >500 K Ohm " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R9" name="AIO_R9" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(-15V_FIELD) - (FIELD_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R23" name="AIO_R23" style="width: 140px;" value=" >500 K Ohm " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R10" name="AIO_R10" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>(+10V_FIELD) - (FIELD_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R24" name="AIO_R24" style="width: 140px;" value=" >500 K Ohm " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R11" name="AIO_R11" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(-10V_FIELD) - (FIELD_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R25" name="AIO_R25" style="width: 140px;" value=" >500 K Ohm " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R12" name="AIO_R12" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+3.3V_FILED) - (FIELD_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R26" name="AIO_R26" style="width: 140px;" value=" >500 K Ohm " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_R13" name="AIO_R13" style="width: 140px;" />Ohm
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+
+                <h2 style="text-align: center; margin: 5px 0; font-size: 20px; font-weight: bold;">Voltage Test</h2>
+                <div class="container">
+                  <div class="section">
+                    <!-- <div class="section-title">PMIC & Peripherals Power</div> -->
+                    <table class="measurement-table">
+                      <tr>
+                        <th colspan="3">PMIC & Peripherals Power</th>
+                      </tr>
+                      <tr>
+                        <th></th>
+                        <th>Passing Value</th>
+                        <th>Measured Value</th>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>(+5V) - (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V13" name="AIO_V13" style="width: 140px;"
+                            value=" 4.85V - 5.20V " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V1" name="AIO_V1" style="width: 140px;" />V
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+3.3V) - (GND) :</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V14" name="AIO_V14" style="width: 140px;"
+                            value=" 3.24V - 3.38V " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V2" name="AIO_V2" style="width: 140px;" />V
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+3.3V_Flash) - (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V15" name="AIO_V15" style="width: 140px;"
+                            value=" 3.24V - 3.38V " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V3" name="AIO_V3" style="width: 140px;" />V
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>(+1.0V) - (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V16" name="AIO_V16" style="width: 140px;"
+                            value=" 0.997V - 1.003V " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V4" name="AIO_V4" style="width: 140px;" />V
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+1.8V) - (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V17" name="AIO_V17" style="width: 140px;"
+                            value=" 1.78V - 1.82V " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V5" name="AIO_V5" style="width: 140px;" />V
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <div class="section">
+                    <table class="measurement-table">
+                      <tr>
+                        <th colspan="3">Isolated Field Power</th>
+                      </tr>
+                      <tr>
+                        <th></th>
+                        <th>Passing Value</th>
+                        <th>Measured Value</th>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>(+12V) - (GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V18" name="AIO_V18" style="width: 140px;"
+                            value=" (+11.85V) - (+12.50V) " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V6" name="AIO_V6" style="width: 140px;" />V
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+5.0V_FIELD) - (FIELD_GND) :</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V19" name="AIO_V19" style="width: 140px;"
+                            value=" +4.85V - +5.20V " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V7" name="AIO_V7" style="width: 140px;" />V
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+15V_FIELD) - (FIELD_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V20" name="AIO_V20" style="width: 140px;"
+                            value=" (+14.85V)- (+15.25V) " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V8" name="AIO_V8" style="width: 140px;" />V
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <label>(-15V_FIELD) - (FIELD_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V21" name="AIO_V21" style="width: 140px;"
+                            value=" (-14.85V) - (-15.25V) " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V9" name="AIO_V9" style="width: 140px;" />V
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+10V_FIELD) - (FIELD_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V22" name="AIO_V22" style="width: 140px;"
+                            value=" (+9.95V) - (+10.05V) " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V10" name="AIO_V10" style="width: 140px;" />V
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(-10V_FIELD) - (FIELD_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V23" name="AIO_V23" style="width: 140px;"
+                            value=" (-9.95V) - (-10.05V) " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V11" name="AIO_V11" style="width: 140px;" />V
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label>(+3.3V_FILED) - (FIELD_GND):</label>
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V24" name="AIO_V24" style="width: 140px;"
+                            value=" (+3.24V) - (+3.38V) " />
+                        </td>
+                        <td>
+                          <input type="text" id="AIO_V12" name="AIO_V12" style="width: 140px;" />V
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+
+                <h2 style="text-align: center; margin: 5px 0; font-size: 20px; font-weight: bold;">Fascia LED</h2>
+                <div class="container">
+                  <table class="AIO_checkbox_table">
+                    <tr>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED1" style="width:25px; height:25px;" />DEBUG1</label>
+                      </td>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED2" style="width:25px; height:25px;" />DEBUG2</label>
+                      </td>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED3" style="width:25px; height:25px;" />+1.0V</label>
+                      </td>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED4" style="width:25px; height:25px;" />+1.8V</label>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED5"
+                            style="width:25px; height:25px;" />CARD_ACTIVE</label>
+                      </td>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED6" style="width:25px; height:25px;" />DONE</label>
+                      </td>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED7" style="width:25px; height:25px;" />Spare1</label>
+                      </td>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED8" style="width:25px; height:25px;" />Spare2</label>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED9" style="width:25px; height:25px;" />+12V</label>
+                      </td>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED10" style="width:25px; height:25px;" />-12V</label>
+                      </td>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED11" style="width:25px; height:25px;" />+5V</label>
+                      </td>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED12" style="width:25px; height:25px;" />+3.3V</label>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED13"
+                            style="width:25px; height:25px;" />+15V_FIELD</label>
+                      </td>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED14"
+                            style="width:25px; height:25px;" />-15V_FIELD</label>
+                      </td>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED15"
+                            style="width:25px; height:25px;" />+5.0V_FIELD</label>
+                      </td>
+                      <td>
+                        <label><input type="checkbox" id="AIO_LED16"
+                            style="width:25px; height:25px;" />+3.3V_FIELD</label>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="AIO_saveInputs" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="AIO_tempValues" style="display:none;">
+          <!-- Resistance Test Inputs -->
+          <input type="hidden" id="AIO_Saved_R1" name="AIO_Saved_R1" />
+          <input type="hidden" id="AIO_Saved_R2" name="AIO_Saved_R2" />
+          <input type="hidden" id="AIO_Saved_R3" name="AIO_Saved_R3" />
+          <input type="hidden" id="AIO_Saved_R4" name="AIO_Saved_R4" />
+          <input type="hidden" id="AIO_Saved_R5" name="AIO_Saved_R5" />
+          <input type="hidden" id="AIO_Saved_R6" name="AIO_Saved_R6" />
+          <input type="hidden" id="AIO_Saved_R7" name="AIO_Saved_R7" />
+          <input type="hidden" id="AIO_Saved_R8" name="AIO_Saved_R8" />
+          <input type="hidden" id="AIO_Saved_R9" name="AIO_Saved_R9" />
+          <input type="hidden" id="AIO_Saved_R10" name="AIO_Saved_R10" />
+          <input type="hidden" id="AIO_Saved_R11" name="AIO_Saved_R11" />
+          <input type="hidden" id="AIO_Saved_R12" name="AIO_Saved_R12" />
+          <input type="hidden" id="AIO_Saved_R13" name="AIO_Saved_R13" />
+          <input type="hidden" id="AIO_Saved_R14" name="AIO_Saved_R14" />
+          <input type="hidden" id="AIO_Saved_R15" name="AIO_Saved_R15" />
+          <input type="hidden" id="AIO_Saved_R16" name="AIO_Saved_R16" />
+          <input type="hidden" id="AIO_Saved_R17" name="AIO_Saved_R17" />
+          <input type="hidden" id="AIO_Saved_R18" name="AIO_Saved_R18" />
+          <input type="hidden" id="AIO_Saved_R19" name="AIO_Saved_R19" />
+          <input type="hidden" id="AIO_Saved_R20" name="AIO_Saved_R20" />
+          <input type="hidden" id="AIO_Saved_R21" name="AIO_Saved_R21" />
+          <input type="hidden" id="AIO_Saved_R22" name="AIO_Saved_R22" />
+          <input type="hidden" id="AIO_Saved_R23" name="AIO_Saved_R23" />
+          <input type="hidden" id="AIO_Saved_R24" name="AIO_Saved_R24" />
+          <input type="hidden" id="AIO_Saved_R25" name="AIO_Saved_R25" />
+          <input type="hidden" id="AIO_Saved_R26" name="AIO_Saved_R26" />
+          <!-- Voltage Test Inputs -->
+
+          <input type="hidden" id="AIO_Saved_V1" name="AIO_Saved_V1" />
+          <input type="hidden" id="AIO_Saved_V2" name="AIO_Saved_V2" />
+          <input type="hidden" id="AIO_Saved_V3" name="AIO_Saved_V3" />
+          <input type="hidden" id="AIO_Saved_V4" name="AIO_Saved_V4" />
+          <input type="hidden" id="AIO_Saved_V5" name="AIO_Saved_V5" />
+          <input type="hidden" id="AIO_Saved_V6" name="AIO_Saved_V6" />
+          <input type="hidden" id="AIO_Saved_V7" name="AIO_Saved_V7" />
+          <input type="hidden" id="AIO_Saved_V8" name="AIO_Saved_V8" />
+          <input type="hidden" id="AIO_Saved_V9" name="AIO_Saved_V9" />
+          <input type="hidden" id="AIO_Saved_V10" name="AIO_Saved_V10" />
+          <input type="hidden" id="AIO_Saved_V11" name="AIO_Saved_V11" />
+          <input type="hidden" id="AIO_Saved_V12" name="AIO_Saved_V12" />
+          <input type="hidden" id="AIO_Saved_V13" name="AIO_Saved_V13" />
+          <input type="hidden" id="AIO_Saved_V14" name="AIO_Saved_V14" />
+          <input type="hidden" id="AIO_Saved_V15" name="AIO_Saved_V15" />
+          <input type="hidden" id="AIO_Saved_V16" name="AIO_Saved_V16" />
+          <input type="hidden" id="AIO_Saved_V17" name="AIO_Saved_V17" />
+          <input type="hidden" id="AIO_Saved_V18" name="AIO_Saved_V18" />
+          <input type="hidden" id="AIO_Saved_V19" name="AIO_Saved_V19" />
+          <input type="hidden" id="AIO_Saved_V20" name="AIO_Saved_V20" />
+          <input type="hidden" id="AIO_Saved_V21" name="AIO_Saved_V21" />
+          <input type="hidden" id="AIO_Saved_V22" name="AIO_Saved_V22" />
+          <input type="hidden" id="AIO_Saved_V23" name="AIO_Saved_V23" />
+          <input type="hidden" id="AIO_Saved_V24" name="AIO_Saved_V24" />
+
+          <!-- Fascia LED Checkbox Inputs -->
+          <input type="hidden" id="AIO_Saved_LED1" name="AIO_Saved_LED1" />
+          <input type="hidden" id="AIO_Saved_LED2" name="AIO_Saved_LED2" />
+          <input type="hidden" id="AIO_Saved_LED3" name="AIO_Saved_LED3" />
+          <input type="hidden" id="AIO_Saved_LED4" name="AIO_Saved_LED4" />
+          <input type="hidden" id="AIO_Saved_LED5" name="AIO_Saved_LED5" />
+          <input type="hidden" id="AIO_Saved_LED6" name="AIO_Saved_LED6" />
+          <input type="hidden" id="AIO_Saved_LED7" name="AIO_Saved_LED7" />
+          <input type="hidden" id="AIO_Saved_LED8" name="AIO_Saved_LED8" />
+          <input type="hidden" id="AIO_Saved_LED9" name="AIO_Saved_LED9" />
+          <input type="hidden" id="AIO_Saved_LED10" name="AIO_Saved_LED10" />
+          <input type="hidden" id="AIO_Saved_LED11" name="AIO_Saved_LED11" />
+          <input type="hidden" id="AIO_Saved_LED12" name="AIO_Saved_LED12" />
+          <input type="hidden" id="AIO_Saved_LED13" name="AIO_Saved_LED13" />
+          <input type="hidden" id="AIO_Saved_LED14" name="AIO_Saved_LED14" />
+          <input type="hidden" id="AIO_Saved_LED15" name="AIO_Saved_LED15" />
+          <input type="hidden" id="AIO_Saved_LED16" name="AIO_Saved_LED16" />
+        </div>
+        <div id="AIO_tempValues" style="display: none;"></div>
+        <script>
+          document.getElementById('AIO_saveInputs').addEventListener('click', function () {
+            // Save resistance and voltage inputs
+            const ids = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15', 'R16', 'R17', 'R18', 'R19', 'R20', 'R21', 'R22', 'R23', 'R24', 'R25', 'R26', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24']
+            ids.forEach((id) => {
+              try {
+                let y = document.getElementById('AIO_' + id).value
+                document.getElementById('AIO_Saved_' + id).value = y
+              } catch (error) {
+                // Code that runs if there is an error
+                console.error('Something went wrong:', error.message)
+              }
+            })
+
+            document.querySelectorAll(".AIO_checkbox_table input[type='checkbox']").forEach((checkbox) => {
+              const checkboxId = checkbox.id
+              const number = checkboxId.replace('AIO_Saved', '') // get "26"
+              const hiddenId = number
+              let AIO_tempContainer = document.getElementById('AIO_tempValues')
+              let input = document.getElementById(hiddenId)
+              if (!input) {
+                input = document.createElement('input')
+                input.type = 'hidden'
+                input.id = hiddenId
+                input.name = hiddenId
+                AIO_tempContainer.appendChild(input)
+              }
+              input.value = checkbox.checked ? 'on' : 'off'
+            })
+            const formData_AIO = new FormData()
+            document.querySelectorAll('#AIO_tempValues input').forEach((input) => {
+              formData_AIO.append(input.id, input.value)
+            })
+            document.getElementById('btn_AI_N_10').hidden = false
+            document.getElementById('btn_AI_0').hidden = false
+            document.getElementById('btn_AI_P_10').hidden = false
+
+            document.getElementById('btn_AO_N_10').hidden = false
+            document.getElementById('btn_AO_0').hidden = false
+            document.getElementById('btn_AO_P_10').hidden = false
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('AIO_Board_Model'))
+            modal.hide()
+          })
+        </script>
+        <!-- Analog Output (8) -->
+        <div class="col">
+          <div class="data-grid-container">
+            <div class="data-grid-buttons">
+              <!-- <label hidden>ANALOG_OUTPUT(8)</label> -->
+              <button id="btn_AO_N_10" hidden>-10V</button>
+              <button id="btn_AO_0" hidden>0V</button>
+              <button id="btn_AO_P_10" hidden>+10V</button>
+            </div>
+            <div class="data-grid table1" hidden>
+              <table id="an_output">
+                <thead>
+                  <tr>
+                    <th id="AO_SLN">SLN</th>
+                    <th id="AO_Channel">Channel No.</th>
+                    <th id="AO_LnT_Val_N_10">Simulated Value</th>
+                    <th id="AO_exp_val_N_10" style="line-height: 1.1;">Expected Value<br>(±50mV)</th>
+                    <th id="AO_Ref_Val_N_10">Observed Value</th>
+                    <th id="AO_Status_N_10">Result</th>
+
+                    <th id="AO_LnT_Val">Simulated Value</th>
+                    <th id="AO_exp_val" style="line-height: 1.1;">Expected Value<br>(±50mV)</th>
+                    <th id="AO_Ref_Val">Observed Value</th>
+                    <th id="AO_Status">Result</th>
+
+                    <th id="AO_LnT_Val_P_10">Simulated Value</th>
+                    <th id="AO_exp_val_P_10" style="line-height: 1.1;">Expected Value<br>(±50mV)</th>
+                    <th id="AO_Ref_Val_P_10">Observed Value</th>
+                    <th id="AO_Status_P_10">Result</th>
+                    <th id="AO_Address">Address</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('btnDelete').addEventListener('click', function () {
+
+      const serialNo = document.getElementById('serial_no').value;
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value
+      fetch('/delete_data/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken // Add CSRF token here
+        },
+        body: JSON.stringify({
+          serialNo: serialNo
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          window.location.href = '/LnT_Main_Details/';
+        })
+        .catch((error) => {
+          console.error('Error:', error)
+          document.getElementById('loader').style.display = 'none'
+        })
+    })
+
+    function getTableDataDigital(tableId) {
+      let table = document.getElementById(tableId).querySelector('tbody')
+      let rows = table.querySelectorAll('tr')
+      let data = []
+      rows.forEach((row) => {
+        let cells = row.querySelectorAll('td')
+        data.push({
+          sln: cells[0]?.innerText,
+          channel: cells[1]?.innerText,
+          lnt_val: cells[2]?.innerText,
+          exp_val: cells[3]?.innerText,
+          ref_val: cells[4]?.innerText,
+          status: cells[5]?.innerText,
+          lnt_val_H: cells[6]?.innerText,
+          exp_val_H: cells[7]?.innerText,
+          ref_val_H: cells[8]?.innerText,
+          status_H: cells[9]?.innerText,
+          address: cells[10]?.innerText
+        })
+      })
+      return data
+    }
+
+    function getTableDataAnalog(tableId) {
+      let table = document.getElementById(tableId).querySelector('tbody')
+      let rows = table.querySelectorAll('tr')
+      let data = []
+      rows.forEach((row) => {
+        let cells = row.querySelectorAll('td')
+        data.push({
+          sln: cells[0]?.innerText,
+          channel: cells[1]?.innerText,
+          lnt_val_N_10: cells[2]?.innerText,
+          exp_val_N_10: cells[3]?.innerText,
+          ref_val_N_10: cells[4]?.innerText,
+          status_N_10: cells[5]?.innerText,
+
+          lnt_val: cells[6]?.innerText,
+          ref_val: cells[7]?.innerText,
+          exp_val: cells[8]?.innerText,
+          status: cells[9]?.innerText,
+
+          lnt_val_P_10: cells[10]?.innerText,
+          exp_val_P_10: cells[11]?.innerText,
+          ref_val_P_10: cells[12]?.innerText,
+          status_P_10: cells[13]?.innerText,
+
+          address: cells[14]?.innerText
+        })
+      })
+      return data
+    }
+  </script>
+  <script>
+    document.getElementById('btnSave').addEventListener('click', function () {
+      document.getElementById('loader').style.display = 'flex' // Show loader
+      let dgInputData = getTableDataDigital('dg_input')
+      let dgOutputData = getTableDataDigital('dg_output')
+      let anInputData = getTableDataAnalog('an_input')
+      let anOutputData = getTableDataAnalog('an_output')
+      let formData = $('#saveForm').serialize() // Serialize all form data
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value
+      fetch('/save_data/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken // Add CSRF token here
+        },
+        body: JSON.stringify({
+          formData: formData,
+          dg_input: dgInputData,
+          dg_output: dgOutputData,
+          an_input: anInputData,
+          an_output: anOutputData
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          location.reload()
+        })
+        .catch((error) => {
+          console.error('Error:', error)
+          document.getElementById('loader').style.display = 'none'
+        })
+    })
+
+    function getTableDataDigital(tableId) {
+      let table = document.getElementById(tableId).querySelector('tbody')
+      let rows = table.querySelectorAll('tr')
+      let data = []
+      rows.forEach((row) => {
+        let cells = row.querySelectorAll('td')
+        data.push({
+          sln: cells[0]?.innerText,
+          channel: cells[1]?.innerText,
+          lnt_val: cells[2]?.innerText,
+          exp_val: cells[3]?.innerText,
+          ref_val: cells[4]?.innerText,
+          status: cells[5]?.innerText,
+          lnt_val_H: cells[6]?.innerText,
+          exp_val_H: cells[7]?.innerText,
+          ref_val_H: cells[8]?.innerText,
+          status_H: cells[9]?.innerText,
+          address: cells[10]?.innerText
+        })
+      })
+      return data
+    }
+
+    function getTableDataAnalog(tableId) {
+      let table = document.getElementById(tableId).querySelector('tbody')
+      let rows = table.querySelectorAll('tr')
+      let data = []
+      rows.forEach((row) => {
+        let cells = row.querySelectorAll('td')
+        data.push({
+          sln: cells[0]?.innerText,
+          channel: cells[1]?.innerText,
+          lnt_val_N_10: cells[2]?.innerText,
+          exp_val_N_10: cells[3]?.innerText,
+          ref_val_N_10: cells[4]?.innerText,
+          status_N_10: cells[5]?.innerText,
+
+          lnt_val: cells[6]?.innerText,
+          ref_val: cells[7]?.innerText,
+          exp_val: cells[8]?.innerText,
+          status: cells[9]?.innerText,
+
+          lnt_val_P_10: cells[10]?.innerText,
+          exp_val_P_10: cells[11]?.innerText,
+          ref_val_P_10: cells[12]?.innerText,
+          status_P_10: cells[13]?.innerText,
+
+          address: cells[14]?.innerText
+        })
+      })
+      return data
+    }
+  </script>
+  <script>
+    $(document).ready(function () {
+      $('#DI_Check').change(function () {
+        if ($(this).is(':checked')) {
+          const serialPort = '/dev/ttyS0'
+          // Send data via AJAX
+          fetch('/detectcard/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              checked: true,
+              card_name: 'DI'
+            })
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              HideAllbuttons()
+              if (data.status === 'success') {
+                document.getElementById('btnBoard_DI').hidden = false
+                document.getElementById('AI_Check').checked = false
+                document.getElementById('DO_Check').checked = false
+              } else {
+                document.getElementById('DI_Check').checked = false
+                HideAllbuttons()
+              }
+            })
+            .catch((error) => console.error('Error:', error))
+        } else {
+          // Hide buttons when unchecked
+          HideAllbuttons()
+        }
+      })
+
+      $('#AI_Check').change(function () {
+        if ($(this).is(':checked')) {
+          const serialPort = '/dev/ttyS0'
+          // Send data via AJAX
+          fetch('/detectcard/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              checked: true,
+              card_name: 'AIO'
+            })
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              HideAllbuttons()
+              if (data.status === 'success') {
+                document.getElementById('btnBoard_AIO').hidden = false
+
+                document.getElementById('DI_Check').checked = false
+                document.getElementById('DO_Check').checked = false
+              } else {
+                document.getElementById('AI_Check').checked = false
+                HideAllbuttons()
+              }
+            })
+            .catch((error) => console.error('Error:', error))
+        } else {
+          // Hide buttons when unchecked
+          HideAllbuttons()
+        }
+      })
+      $('#DO_Check').change(function () {
+        if ($(this).is(':checked')) {
+          const serialPort = '/dev/ttyS0'
+          // Send data via AJAX
+          fetch('/detectcard/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              checked: true,
+              card_name: 'DO'
+            })
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              HideAllbuttons()
+              if (data.status === 'success') {
+                document.getElementById('btnBoard_DO').hidden = false
+                document.getElementById('AI_Check').checked = false
+                document.getElementById('DI_Check').checked = false
+              } else {
+                document.getElementById('DI_Check').checked = false
+                HideAllbuttons()
+              }
+            })
+            .catch((error) => console.error('Error:', error))
+        } else {
+          // Hide buttons when unchecked
+          HideAllbuttons()
+        }
+      })
+    })
+    function HideAllbuttons() {
+      document.getElementById('btnLow_DI').hidden = true
+      document.getElementById('btnHigh_DI').hidden = true
+      document.getElementById('btnBoard_DI').hidden = true
+
+      document.getElementById('btnLow_DO').hidden = true
+      document.getElementById('btnHigh_DO').hidden = true
+      document.getElementById('btnBoard_DO').hidden = true
+
+      document.getElementById('btn_AI_N_10').hidden = true
+      document.getElementById('btn_AI_0').hidden = true
+      document.getElementById('btn_AI_P_10').hidden = true
+      document.getElementById('btnBoard_AIO').hidden = true
+
+      document.getElementById('btn_AO_N_10').hidden = true
+      document.getElementById('btn_AO_0').hidden = true
+      document.getElementById('btn_AO_P_10').hidden = true
+    }
+    function displaybuttonifdata() {
+      const tdValue = document.querySelector('#dg_input tr td:nth-child(3)').innerText
+      if (tdValue != '') {
+        document.getElementById('btnLow_DI').hidden = false
+        document.getElementById('btnHigh_DI').hidden = false
+        document.getElementById('btnBoard_DI').hidden = false
+
+        document.getElementById('btnLow_DO').hidden = false
+        document.getElementById('btnHigh_DO').hidden = false
+        document.getElementById('btnBoard_DO').hidden = false
+
+
+        checkboxValue = document.querySelector('DI_Check').checked = true
+      }
+      tdValue = document.querySelector('#dg_output tr td:nth-child(3)').innerText
+      if (tdValue != '') {
+        // document.getElementById('btnLow_DO').hidden = false
+        // document.getElementById('btnHigh_DO').hidden = false
+        // document.getElementById('btnBoard_DO').hidden = false
+        checkboxValue = document.querySelector('DO_Check').checked = true
+      }
+    }
+  </script>
+  <script>
+    function populateTableColumn(tableId, values, columnIndex, rowCount, com_val1, com_val2, is_same, status_col_index) {
+      const table = document.getElementById(tableId)
+      const tbody = table.querySelector('tbody')
+
+      // Ensure table has enough rows
+      while (tbody.rows.length < rowCount) {
+        const row = tbody.insertRow()
+        for (let i = 0; i < table.tHead.rows[0].cells.length; i++) {
+          row.insertCell()
+        }
+      }
+
+      for (let i = 0; i < rowCount; i++) {
+        const row = tbody.rows[i]
+        const cell = row.cells[columnIndex]
+        const statusCell = row.cells[status_col_index]
+
+        // Set the column value
+        cell.textContent = values[i] // In case result is shorter than the row count
+
+        // Get the values from com_val1 and com_val2 columns in the same row
+        const value1 = row.cells[com_val1]?.textContent
+        const value2 = row.cells[com_val2]?.textContent
+
+        // Logic for determining Pass/Fail based on com_val1, com_val2, and is_same
+        let status = 'Fail' // Default to 'Fail'
+
+        if ((value1 === value2 && is_same === true) || (value1 !== value2 && is_same === false)) {
+          status = 'Pass'
+        }
+        if (statusCell) {
+          statusCell.textContent = status
+
+          // Apply styles: Green for Pass, Red for Fail, and Bold text for both
+          if (status === 'Pass') {
+            statusCell.style.color = 'green'
+          } else if (status === 'Fail') {
+            statusCell.style.color = 'red'
+          }
+          statusCell.style.fontWeight = 'bold' // Make the text bold for both Pass and Fail
+        }
+      }
+    }
+
+    function FillTableFromDB(tableId, data) {
+      const table = document.getElementById(tableId)
+      const thead = table.querySelector('thead tr')
+      const tbody = table.querySelector('tbody')
+      tbody.innerHTML = '' // Clear existing rows
+
+      if (data.length > 0) {
+        // Populate header row
+
+        // Populate data rows
+        data.forEach((item) => {
+          const row = document.createElement('tr')
+          Object.keys(item).forEach((key) => {
+            const cell = document.createElement('td')
+            cell.textContent = item[key]
+            cell.setAttribute('data-field', key) // Add data-field attribute
+
+            row.appendChild(cell)
+          })
+          tbody.appendChild(row)
+        })
+      }
+    }
+
+    function fetchData(serial_no) {
+      fetch(`/api/lntmain/fetch_data/?serial_no=${serial_no}`)
+        .then((response) => {
+          if (!response.ok) throw new Error('Network response was not ok.')
+          return response.json()
+        })
+        .then((data) => {
+          FillTableFromDB('dg_input', data.dg_input)
+          FillTableFromDB('dg_output', data.dg_output)
+          FillTableFromDB('an_input', data.an_input)
+          FillTableFromDB('an_output', data.an_output)
+
+          const DIboardData = data.dg_input_board[0];
+          document.getElementById('R1').value = DIboardData.R1
+          document.getElementById('R2').value = DIboardData.R2
+          document.getElementById('R3').value = DIboardData.R3
+          document.getElementById('R4').value = DIboardData.R4
+
+          const DOboardData = data.dg_output_board[0];
+          document.getElementById('DO_R1').value = DOboardData.R1
+          document.getElementById('DO_R2').value = DOboardData.R2
+          document.getElementById('DO_R3').value = DOboardData.R3
+          document.getElementById('DO_R4').value = DOboardData.R4
+
+
+          const AIOboardData = data.AIO_board[0];
+          document.getElementById('AIO_R1').value = AIOboardData.AIO_R1
+          document.getElementById('AIO_R2').value = AIOboardData.AIO_R2
+          document.getElementById('AIO_R3').value = AIOboardData.AIO_R3
+          document.getElementById('AIO_R4').value = AIOboardData.AIO_R4
+
+          if (AIOboardData.AIO_LED16 === 'ON') {
+            document.getElementById('AIO_LED16').checked = true
+          }
+          else { document.getElementById('AIO_LED16').checked = false }
+
+
+
+          if (data.main_id === 0) {
+            // When ID is 0, enable the textbox and change button text to "Save"
+            document.getElementById('IDTextBox').disabled = true
+            document.getElementById('IDTextBox').value = serial_no
+            document.getElementById('btnSave').style.display = 'inline-block';
+            document.getElementById('btnDelete').style.display = 'none';
+
+          } else {
+            // When ID is not 0, disable the textbox and change button text to "Update"
+            document.getElementById('IDTextBox').disabled = true
+            document.getElementById('IDTextBox').value = serial_no
+            document.getElementById('btnDelete').style.display = 'inline-block';
+            document.getElementById('btnSave').style.display = 'none';
+
+          }
+        })
+
+        .catch((error) => {
+          console.error('Failed to fetch data:', error)
+        })
+    }
+    // Call fetchData on page load
+    document.addEventListener('DOMContentLoaded', function () {
+      const serialNo = document.getElementById('serial_no').value;
+      fetchData(serialNo);
+    });
+
+    function setTblColValue(value, col_name, tblname) {
+      // Select the table and update the cell with the given col_name
+      $(`#${tblname} tbody tr`).each(function () {
+        let cell = $(this).find(`td[data-field="${col_name}"]`)
+        if (cell.length) {
+          cell.text(value) // Set the new value
+        }
+      })
+    }
+
+    // Event listeners for buttons
+    $('#btnLow_DI').on('click', function (e) {
+      e.preventDefault()
+
+      setTblColValue(0, 'lnt_val', 'dg_input')
+      setTblColValue(0, 'exp_val', 'dg_input')
+      const serialPort = '/dev/ttyS0'
+      // Send data via AJAX
+      fetch('/api/btn_DI_Low_process_data/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serial_port: serialPort
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const resultValues = data.result
+          populateTableColumn('dg_input', resultValues, 4, 32, 4, 2, true, 5)
+        })
+        .catch((error) => console.error('Error:', error))
+    })
+
+    $('#btnHigh_DI').on('click', function (e) {
+      e.preventDefault()
+      setTblColValue(1, 'lnt_val_H', 'dg_input')
+      setTblColValue(1, 'exp_val_H', 'dg_input')
+
+      const serialPort = '/dev/ttyS0'
+      // Send data via AJAX
+      fetch('/api/btn_DI_High_process_data/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serial_port: serialPort
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const resultValues = data.result
+          populateTableColumn('dg_input', resultValues, 8, 32, 8, 6, true, 9)
+        })
+        .catch((error) => console.error('Error:', error))
+    })
+
+    $('#btnLow_DO').on('click', function (e) {
+      e.preventDefault()
+      setTblColValue(0, 'lnt_val', 'dg_output')
+      setTblColValue(1, 'exp_val', 'dg_output')
+      const serialPort = '/dev/ttyS0'
+      // Send data via AJAX
+      fetch('/api/btn_DO_Low_process_data/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serial_port: serialPort
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const resultValues = data.result
+
+          populateTableColumn('dg_output', resultValues, 4, 28, 4, 2, false, 5)
+        })
+        .catch((error) => console.error('Error:', error))
+    })
+
+    $('#btnHigh_DO').on('click', function (e) {
+      e.preventDefault()
+      setTblColValue(1, 'lnt_val_H', 'dg_output')
+      setTblColValue(0, 'exp_val_H', 'dg_output')
+      const serialPort = '/dev/ttyS0'
+      // Send data via AJAX
+      fetch('/api/btn_DO_High_process_data/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serial_port: serialPort
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const resultValues = data.result
+          populateTableColumn('dg_output', resultValues, 8, 28, 8, 6, false, 9)
+        })
+        .catch((error) => console.error('Error:', error))
+    })
+
+    $('#btn_AI_N_10').on('click', function (e) {
+      e.preventDefault()
+      setTblColValue('-10.00', 'lnt_val_N_10', 'an_input')
+      setTblColValue('-10.00', 'exp_val_N_10', 'an_input')
+      const serialPort = '/dev/ttyS0'
+      // Send data via AJAX
+      fetch('/api/btn_AI_N_10_V_process_data/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serial_port: serialPort
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const resultValues = data.result
+          populateTableColumn('an_input', resultValues, 4, 12, 4, 2, true, 5)
+          updateStatusForTable('an_input', 4, 2, 5) // Update status for the table
+        })
+        .catch((error) => console.error('Error:', error))
+    })
+    $('#btn_AI_0').on('click', function (e) {
+      e.preventDefault()
+      setTblColValue('+00.00', 'lnt_val', 'an_input')
+      setTblColValue('+00.00', 'exp_val', 'an_input')
+      const serialPort = '/dev/ttyS0'
+      // Send data via AJAX
+      fetch('/api/btn_AI_0_V_process_data/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serial_port: serialPort
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const resultValues = data.result
+          populateTableColumn('an_input', resultValues, 8, 12, 8, 6, true, 9)
+          updateStatusForTable('an_input', 8, 6, 9) // Update status for the table
+        })
+        .catch((error) => console.error('Error:', error))
+    })
+
+    $('#btn_AI_P_10').on('click', function (e) {
+      e.preventDefault()
+      setTblColValue('+10.00', 'lnt_val_P_10', 'an_input')
+      setTblColValue('+10.00', 'exp_val_P_10', 'an_input')
+      const serialPort = '/dev/ttyS0'
+      // Send data via AJAX
+      fetch('/api/btn_AI_P_10_V_process_data/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serial_port: serialPort
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const resultValues = data.result
+          populateTableColumn('an_input', resultValues, 12, 12, 12, 10, true, 13)
+          updateStatusForTable('an_input', 12, 10, 13) // Update status for the table
+        })
+        .catch((error) => console.error('Error:', error))
+    })
+
+    $('#btn_AO_N_10').on('click', function (e) {
+      e.preventDefault()
+      setTblColValue('-10.00', 'lnt_val_N_10', 'an_output')
+      setTblColValue('-10.00', 'exp_val_N_10', 'an_output')
+
+      const serialPort = '/dev/ttyS0'
+      // Send data via AJAX
+      fetch('/api/btn_AO_N_10_V_process_data/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serial_port: serialPort
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const resultValues = data.result
+
+          populateTableColumn('an_output', resultValues, 4, 8, 4, 2, false, 5)
+          updateStatusForTable('an_output', 4, 2, 5) // Update status for the table
+        })
+        .catch((error) => console.error('Error:', error))
+    })
+    $('#btn_AO_0').on('click', function (e) {
+      e.preventDefault()
+      setTblColValue('+00.00', 'lnt_val', 'an_output')
+      setTblColValue('+00.00', 'exp_val', 'an_output')
+      const serialPort = '/dev/ttyS0'
+      // Send data via AJAX
+      fetch('/api/btn_AO_0_V_process_data/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serial_port: serialPort
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const resultValues = data.result
+          populateTableColumn('an_output', resultValues, 8, 8, 8, 6, false, 9)
+          updateStatusForTable('an_output', 8, 6, 9) // Update status for the table
+        })
+        .catch((error) => console.error('Error:', error))
+    })
+
+    $('#btn_AO_P_10').on('click', function (e) {
+      e.preventDefault()
+      setTblColValue('+10.00', 'lnt_val_P_10', 'an_output')
+      setTblColValue('+10.00', 'exp_val_P_10', 'an_output')
+      const serialPort = '/dev/ttyS0'
+      // Send data via AJAX
+      fetch('/api/btn_AO_P_10_V_process_data/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serial_port: serialPort
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const resultValues = data.result
+          populateTableColumn('an_output', resultValues, 12, 8, 12, 10, false, 13)
+          updateStatusForTable('an_output', 12, 10, 13) // Update status for the table
+        })
+        .catch((error) => console.error('Error:', error))
+    })
+
+    function updateStatusForTable(tableId, lntIndex, refIndex, statusindex) {
+      // Get all rows from the table
+      let table = document.getElementById(tableId)
+      let rows = table.getElementsByTagName('tr')
+
+      // Loop through each row
+      for (let i = 1; i < rows.length; i++) {
+        let cells = rows[i].getElementsByTagName('td')
+
+        if (cells.length > 0) {
+          let lntValue = cells[lntIndex].innerText.trim()
+          let refValue = cells[refIndex].innerText.trim()
+
+          // Convert both values to strings
+          lntValue = String(lntValue)
+          refValue = String(refValue)
+
+          let status = cells[statusindex] // Last second column for status
+
+          // Compare based on table type
+
+          if (tableId === 'an_input') {
+            // For analog input/output, calculate +/- 100mVolts range converted in to volts
+            let lntNum = parseFloat(lntValue);
+            let refNum = parseFloat(refValue);
+
+            if (isNaN(lntNum) || isNaN(refNum)) return; // Skip invalid rows
+
+            // Set the tolerance range
+            const tolerance = 0.07;
+
+            // Calculate the lower and upper limits
+            const lowerLimit = refNum - tolerance;
+            const upperLimit = refNum + tolerance;
+
+            // Check if the value is within the range
+            if (lntNum >= lowerLimit && lntNum <= upperLimit) {
+              status.innerHTML = 'Pass';
+              status.style.color = 'green';
+            } else {
+              status.innerHTML = 'Fail';
+              status.style.color = 'red';
+            }
+          } else if (tableId === 'an_output') {
+            let lntNum = parseFloat(lntValue);
+            let refNum = parseFloat(refValue);
+
+            if (isNaN(lntNum) || isNaN(refNum)) return; // Skip invalid rows
+
+            // Set the tolerance range
+            const tolerance = 0.07;
+
+            // Calculate the lower and upper limits
+            const lowerLimit = refNum - tolerance;
+            const upperLimit = refNum + tolerance;
+
+            // Check if the value is within the range
+            if (lntNum >= lowerLimit && lntNum <= upperLimit) {
+              status.innerHTML = 'Pass';
+              status.style.color = 'green';
+            } else {
+              status.innerHTML = 'Fail';
+              status.style.color = 'red';
+            }
+          }
+        }
+      }
+    }
+
+
+    document.getElementById('btnSearch').addEventListener('click', function (e) {
+      e.preventDefault()
+      let mainId = document.getElementById('IDTextBox').value
+      if (!mainId || mainId.trim() === '' || mainId < 1) {
+        Swal.fire({
+          title: 'Serial No.',
+          icon: 'error',
+          text: 'Please enter a valid Serial No.',
+          draggable: false,
+          confirmButtonText: 'OK',
+          allowOutsideClick: false,
+          allowEscapeKey: true,
+          allowEnterKey: false
+        })
+        return
+      }
+
+      fetchData(mainId)
+    })
+
+    function clearTable(tableId) {
+      document.getElementById(tableId).querySelector('tbody').innerHTML = ''
+    }
+
+    document.getElementById('btnReset').addEventListener('click', function (e) {
+      e.preventDefault()
+      document.getElementById('IDTextBox').value = ''
+      document.getElementById('IDTextBox').disabled = false
+      document.getElementById('btnSave').innerText = 'Save'
+      clearTable('dg_input')
+      clearTable('dg_output')
+      clearTable('an_input')
+      clearTable('an_output')
+    })
+
+    document.getElementById('btnRefresh').addEventListener('click', function (e) {
+      e.preventDefault()
+      location.reload()
+    })
+  </script>
+</body>
+
+</html>

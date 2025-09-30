@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSC CARD TEST</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #cce0f5;
+      padding: 30px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: #e9f6fb;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #003366;
+      font-size: 24px;
+    }
+
+    .btn-group {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      background: #0d6efd;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background: #084298;
+    }
+
+    .btn.active {
+      background: #0c746e !important;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    th {
+      background: #0e708b;
+      color: white;
+      text-align: center;
+      padding: 12px;
+      font-size: 16px;
+    }
+
+    td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    tr:hover {
+      background-color: #f1faff;
+    }
+
+    input[type="text"] {
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .panel {
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 15px;
+      display: none;
+    }
+
+    #normalPanel {
+      background: #eafbea;
+    }
+
+    #loopbackPanel {
+      background: #fff3cd;
+    }
+
+    .top-right {
+      text-align: right;
+      margin-bottom: 10px;
+    }
+
+    .pdf-btn {
+      display: block;
+      margin: 15px auto;
+      background: #6f42c1;
+    }
+
+    .status-ok {
+      background: green;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+
+    .status-notok {
+      background: red;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h2>SSC CARD TEST</h2>
+
+    <div class="btn-group">
+      <button id="btnNormal" class="btn" onclick="showNormalTest()">Normal Test</button>
+      <button id="btnLoopback" class="btn" onclick="showLoopbackTest()">Loopback Test</button>
+      <button id="btnRefresh" class="btn" onclick="refreshPage()">Refresh</button>
+      <button onclick="goBack()" class="btn">⬅ Back</button>
+    </div>
+
+    <!-- Normal Test Panel -->
+    <div id="normalPanel" class="panel">
+      <div class="top-right">
+        <button id="btnStart" class="btn">Start Normal Test</button>
+        <button id="btnStop" class="btn">Stop Normal Test</button>
+      </div>
+      <table id="normalTable">
+        <thead>
+          <tr>
+            <th>Channel</th>
+            <th>Observed Value</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in "12345678" %}
+          <tr>
+            <td>Channel {{ i }}</td>
+            <td><input type="text" placeholder="Read Value" id="txtReadN{{ i }}" name="txtReadN{{ i }}"></td>
+            <td>
+              <select id="DropdownN{{ i }}" onchange="setColor(this)">
+                <option value="NOT OK">NOT OK</option>
+                <option value="OK">OK</option>
+              </select>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button class="btn pdf-btn" onclick="generateNormalPDF()">Generate Normal Test PDF</button>
+    </div>
+
+    <!-- Loopback Test Panel -->
+    <div id="loopbackPanel" class="panel">
+      <h2 style="text-align:center;">Loopback Test</h2>
+
+      <div style="text-align:center; margin-bottom:10px;">
+        <button onclick="fetchLoopbackData()">Run Loopback Test</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Channel</th>
+            <th>Observed Value</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Channel 1</td>
+            <td><input type="text" id="textboxl1" readonly></td>
+            <td><label id="StatusL1"></label></td>
+          </tr>
+          <tr>
+            <td>Channel 2</td>
+            <td><input type="text" id="textboxl2" readonly></td>
+            <td><label id="StatusL2"></label></td>
+          </tr>
+          <tr>
+            <td>Channel 3</td>
+            <td><input type="text" id="textboxl3" readonly></td>
+            <td><label id="StatusL3"></label></td>
+          </tr>
+          <tr>
+            <td>Channel 4</td>
+            <td><input type="text" id="textboxl4" readonly></td>
+            <td><label id="StatusL4"></label></td>
+          </tr>
+          <tr>
+            <td>Channel 5</td>
+            <td><input type="text" id="textboxl5" readonly></td>
+            <td><label id="StatusL5"></label></td>
+          </tr>
+          <tr>
+            <td>Channel 6</td>
+            <td><input type="text" id="textboxl6" readonly></td>
+            <td><label id="StatusL6"></label></td>
+          </tr>
+          <tr>
+            <td>Channel 7</td>
+            <td><input type="text" id="textboxl7" readonly></td>
+            <td><label id="StatusL7"></label></td>
+          </tr>
+          <tr>
+            <td>Channel 8</td>
+            <td><input type="text" id="textboxl8" readonly></td>
+            <td><label id="StatusL8"></label></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn pdf-btn" onclick="generateLoopbackPDF()">Generate Loopback Test PDF</button>
+    </div>
+
+    <script>
+      function clearActiveButtons() {
+        document.getElementById("btnNormal").classList.remove("active");
+        document.getElementById("btnLoopback").classList.remove("active");
+        document.getElementById("btnNormal").style.display = "inline-block";
+        document.getElementById("btnLoopback").style.display = "inline-block";
+      }
+
+      function showNormalTest() {
+        let confirmTest = confirm("Ensure hardware is connected for Normal Test. Continue?");
+        if (confirmTest) {
+          clearActiveButtons();
+          document.getElementById("btnNormal").classList.add("active");
+          document.getElementById("loopbackPanel").style.display = "none";
+          document.getElementById("normalPanel").style.display = "block";
+          document.getElementById("btnLoopback").style.display = "none"; // hide loopback button
+        }
+      }
+
+      function showLoopbackTest() {
+        let confirmTest = confirm("Ensure hardware is connected for Loopback Test. Continue?");
+        if (confirmTest) {
+          clearActiveButtons();
+          document.getElementById("btnLoopback").classList.add("active");
+          document.getElementById("normalPanel").style.display = "none";
+          document.getElementById("loopbackPanel").style.display = "block";
+          document.getElementById("btnNormal").style.display = "none"; // hide normal button
+
+          fetchLoopbackData();
+        }
+      }
+
+      function refreshPage() {
+        clearActiveButtons();
+        document.getElementById("normalPanel").style.display = "none";
+        document.getElementById("loopbackPanel").style.display = "none";
+      }
+
+      function setColor(selectElement) {
+        if (selectElement.value === "OK") {
+          selectElement.style.backgroundColor = "green";
+          selectElement.style.color = "white";
+        } else {
+          selectElement.style.backgroundColor = "red";
+          selectElement.style.color = "white";
+        }
+      }
+
+      function goBack() {
+        window.location.href = "{% url 'LnT_Main_Details' %}";
+      }
+
+      // Placeholder PDF functions
+      function generateNormalPDF() {
+        alert("Normal Test PDF generation logic goes here.");
+      }
+
+      function generateLoopbackPDF() {
+        alert("Loopback Test PDF generation logic goes here.");
+      }
+
+      // Auto Read Logic (Normal Test)
+      let intervalId = null;
+      function fetchChannelData(channel) {
+        const txt = document.getElementById(`txtReadN${channel}`);
+        fetch(`/get_ReadN${channel}_id/`)
+          .then(response => response.json())
+          .then(data => {
+            txt.value = data[`ReadN${channel}_id_dec`];
+          })
+          .catch(error => {
+            console.error(`Error fetching Channel ${channel}:`, error);
+            txt.value = "Error";
+          });
+      }
+      function startAutoRead() {
+        if (intervalId) return;
+        intervalId = setInterval(() => {
+          for (let i = 1; i <= 8; i++) {
+            fetchChannelData(i);
+          }
+        }, 1000);
+      }
+      function stopAutoRead() {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("btnStart").addEventListener("click", startAutoRead);
+        document.getElementById("btnStop").addEventListener("click", stopAutoRead);
+      });
+
+      // // Loopback Test Data Fetcher
+      // function fetchLoopbackData() {
+      //   fetch(`/get_loopback_data/`)
+      //     .then(response => response.json())
+      //     .then(data => {
+      //       let observed = data["observed_value"]; // Example: "01010000"
+      //       updateLoopbackTable(observed);
+      //     })
+      //     .catch(error => {
+      //       console.error("Error fetching loopback data:", error);
+      //     });
+      // }
+
+
+
+      // Loopback Test 
+
+
+      function updateLoopbackTable(observed) {
+        // Ensure string is 8 chars
+        observed = observed.padStart(8, "0");
+
+        for (let i = 1; i <= 8; i++) {
+          let bit = observed[observed.length - i]; // right-to-left
+          let obsBox = document.getElementById(`ObservedL${i}`);
+          let statusCell = document.getElementById(`StatusL${i}`);
+
+          obsBox.value = bit;  // fill textbox
+
+          if (bit === "0") {
+            statusCell.textContent = "OK";
+            statusCell.className = "status-ok";
+          } else {
+            statusCell.textContent = "NOT OK";
+            statusCell.className = "status-notok";
+          }
+        }
+      }
+    </script>
+
+   <script>
+function fetchLoopbackData() {
+  fetch("/get_Loopback_Test/")
+    .then(response => response.json())
+    .then(data => {
+      if (data.RightByte_Binary) {
+        let binStr = data.RightByte_Binary;  // e.g. "01010000"
+        console.log("Binary Value:", binStr);
+
+        for (let i = 0; i < binStr.length; i++) {
+          let bitValue = binStr[i];
+
+          // Update textbox
+          let textbox = document.getElementById("textboxl" + (i + 1));
+          if (textbox) {
+            textbox.value = bitValue;
+          }
+
+          // Update status
+          let statusLabel = document.getElementById("StatusL" + (i + 1));
+          if (statusLabel) {
+            if (bitValue === "0") {
+              statusLabel.textContent = "OK";
+              statusLabel.style.color = "green";
+            } else {
+              statusLabel.textContent = "NOT OK";
+              statusLabel.style.color = "red";
+            }
+          }
+        }
+      } else {
+        alert("Error: " + (data.error || "No binary data received"));
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
+    });
+}
+</script>
+
+
+</body>
+
+</html>

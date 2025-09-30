@@ -1,0 +1,343 @@
+ <script>
+     async function generatePDF_SSC() {
+       // HEADER values
+       const imageUrl = "{% static 'Images/LnT_Logo1.png' %}"
+       const product_description = ""//document.getElementById('product_description')?.value || ''
+       const cat_no = '' //document.getElementById('cat_no')?.value || ''
+       const serial_no = ''//document.getElementById('serial_no')?.value || ''
+       const manufacturing_date = ''//document.getElementById('manufacturing_date')?.value || ''
+       const project_name = ''//document.getElementById('project_name')?.value || ''
+       const project_no = ''//document.getElementById('project_no')?.value || ''
+       const customer_name = ''//document.getElementById('customer_name')?.value || ''
+       const customer_reference_no = ''// document.getElementById('customer_reference_no')?.value || ''
+       const testedby1 = ''//document.getElementById('testedby1')?.value || ''
+
+       // FOOTER values
+       const bill_of_material = ''//document.getElementById('bill_of_material')?.value || ''
+       const ga_instruction = ''//document.getElementById('ga_assembly_instruction')?.value || ''
+       const test_instruction = ''//document.getElementById('test_instruction')?.value || ''
+
+       const manufacturing = ''//document.getElementById('manufacturing')?.value || ''
+       const date1 = ''//document.getElementById('date1')?.value || ''
+       const quality_control_review = ''//document.getElementById('quality_control_review')?.value || ''
+       const date2 = ''//document.getElementById('date2')?.value || ''
+       const customer_inspection = ''//document.getElementById('customer_inspection')?.value || ''
+       const date3 = ''//document.getElementById('date3')?.value || ''
+       const { jsPDF } = window.jspdf
+       const doc = new jsPDF()
+
+    //   debugger
+
+       const margin = 3
+       const pageWidth = doc.internal.pageSize.getWidth()
+       const pageHeight = doc.internal.pageSize.getHeight()
+       const usableWidth = pageWidth - 2 * margin
+
+       doc.rect(margin, margin, usableWidth, pageHeight - 2 * margin)
+
+       let startX = margin
+       let startY = margin
+       let cellHeight = 12
+       let y = startY + cellHeight * 5 + 5
+
+       const imageDataUrl = await fetch(imageUrl)
+         .then((response) => response.blob())
+         .then(
+           (blob) =>
+             new Promise((resolve, reject) => {
+               const reader = new FileReader()
+               reader.onloadend = () => resolve(reader.result)
+               reader.onerror = reject
+               reader.readAsDataURL(blob)
+             })
+         )
+
+       const colWidths = [usableWidth / 4, usableWidth / 4, usableWidth / 4, usableWidth / 4]
+
+       doc.rect(startX, startY, usableWidth, cellHeight * 4)
+
+       doc.setFontSize(18)
+       doc.setFont('times', 'italic', 'bold')
+       doc.addImage(imageDataUrl, 'PNG', startX + 2, startY + 1.5, 70, 9)
+       doc.setFont('helvetica', 'bold')
+       doc.setFontSize(11)
+
+       const title = 'SSC CARD TEST REPORT'
+       const titleWidth = doc.getTextWidth(title)
+       doc.text(title, pageWidth - titleWidth - 9, startY + 9)
+
+       addPageHeaderFooterDI(doc)
+       // // //================================================================================
+
+    
+      // === TEST RESULT ===
+
+       y -= 12 // Add spacing after previous table
+       doc.setFontSize(12)
+       doc.setFont('helvetica', 'bold')
+       doc.text('1-   TEST RESULT ', margin + 6, y)
+
+      // === Power_Supply_Test ===
+       y += 5
+       doc.setFont('helvetica', 'bold')
+       doc.setFontSize(10)
+       doc.text('1.1-   Power Supply Test', margin + 6, y)
+
+       y -= 2
+       doc.setLineWidth(0.2); // Optional: make line thicker
+       doc.line(8, 67, 197, 67); // From x=4 to x=206 at y=62
+       doc.line(8, 71, 197, 71);
+       doc.line(8, 90, 197, 90);
+
+       // Vertical lines (4 total)
+       doc.line(8, 67, 8, 90);
+       doc.line(55, 67, 55, 90);
+       doc.line(105, 67, 105, 90);
+       doc.line(155, 67, 155, 90);
+       doc.line(197, 67, 197, 90);
+
+
+       y += 6
+       doc.setFontSize(8)
+       doc.setFont('helvetica', 'bold')
+
+       // Row 1
+       doc.text('Description', margin + 15, y)
+       doc.text('Expected Value', margin + 65, y)
+       doc.text('Observed Value:', pageWidth - margin - 40, y)
+
+       y += 4
+
+       const Power_Supply_Test = [
+         { no: '1.', measured: 'Resistance between 5V VDD and FGND (across Diode D4)', passval: '>=260 Ohm', id: 'R1' },
+         { no: '2.', measured: 'Resistance between 5V VCC and GND (across Diode D2)', passval: '>= 4K Ohm', id: 'R2' },
+         { no: '3.', measured: 'Resistance between 1.8V VCC and GND (across Jumper J10 & GND)', passval: '>=1.3K Ohm', id: 'R3' },
+         { no: '4.', measured: 'Resistance between 3.3V VCC and GND (across Jumper J11 & GND)', passval: '>= 109 Ohm', id: 'R4' },
+         { no: '5.', measured: 'Resistance between 2.5V VCC and GND (across Jumper J4 & GND)', passval: '>= 13K Ohm', id: 'R5' },
+         { no: '6.', measured: 'VME Supply VCC & GND (across Zener Diode D2 after POWER ON)', passval: '5V ± 0.1V', id: 'R6' },
+         { no: '7.', measured: 'Filed Supply VDD & GND (across Zener Diode D4 after POWER ON)', passval: '5V ± 0.2V', id: 'R7' },
+       ]
+
+       Power_Supply_Test.forEach((item) => {
+         // const val = document.getElementById(item.id)?.value || ''
+         // const pval = document.getElementById(item.passval)?.value || ''
+         doc.setFont('helvetica', 'normal')
+         doc.text(`${item.no} ${item.measured}:`, margin + 8, y)
+         doc.text(item.passval, margin + 115, y)
+         doc.setFont('helvetica', 'bold')
+         doc.text(item.id, pageWidth - margin - 25, y, { align: 'right' })
+         y += 5
+       })
+
+       // === LED_STATUS  ===
+
+       y += 0
+       doc.setFontSize(9)
+       doc.setFont('helvetica', 'bold')
+       doc.text('5.3- CARD STATUS INDICATOR LED TEST ', margin + 6, y)
+       y += 4
+
+       doc.setLineWidth(0.2); // Optional: make line thicker
+       doc.line(8, 124, 197, 124); // From x=4 to x=206 at y=62
+       doc.line(8, 128, 197, 128);
+       doc.line(8, 149, 197, 149);
+
+       // Vertical lines (4 total)
+       doc.line(8, 124, 8, 149);
+       doc.line(55, 124, 55, 149);
+       doc.line(105, 124, 105, 149);
+       doc.line(155, 124, 155, 149);
+       doc.line(197, 124, 197, 149);
+
+       doc.setFontSize(8)
+       doc.setFont('helvetica', 'bold')
+       doc.text('LED (Facia)', margin + 9, y)
+       doc.text('Built-in Test Mode', margin + 115, y)
+       doc.text('With respect to:', margin + 65, y)
+       doc.text('Observation during test mode (OK/ Not OK)', pageWidth - margin - 40, y)
+       y += 5
+
+       const LED_STATUS = [
+         { no: '1.', measured: 'VCC', passval: '5VDC VME Supply OK (P1 Connector)', id: 'R9' },
+         { no: '2.', measured: 'VDD', passval: '5VDC Field Supply OK (P2 Connector)', id: 'R10' },
+         { no: '3.', measured: 'STS', passval: 'Blinking', id: 'R11' },
+         { no: '4.', measured: 'LED1', passval: 'Blinking', id: 'R12' },
+         { no: '5.', measured: 'LED2', passval: 'Blinking', id: 'R13' },
+         { no: '6.', measured: 'LED1', passval: 'Blinking', id: 'R14' }
+       ]
+
+       LED_STATUS.forEach((item) => {
+         const val = document.getElementById(item.id)?.value || ''
+         const pval = document.getElementById(item.passval)?.value || ''
+         doc.setFont('helvetica', 'normal')
+         doc.text(`${item.no} ${item.measured}:`, margin + 9, y)
+         doc.text(`${pval}`, margin + 115, y)
+         doc.setFont('helvetica', 'bold')
+         doc.text(`${val} Ohm`, pageWidth - margin - 25, y, { align: 'right' })
+         y += 5
+       })
+       // Add a new page for table
+       doc.addPage()
+       addPageHeaderFooterDI(doc)
+       function addPageHeaderFooterDI(doc) {
+         const margin = 3
+         const pageWidth = doc.internal.pageSize.getWidth()
+         const pageHeight = doc.internal.pageSize.getHeight()
+         const usableWidth = pageWidth - 2 * margin
+
+         doc.rect(margin, margin, usableWidth, pageHeight - 2 * margin)
+
+         let startX = margin
+         let startY = margin
+         let cellHeight = 12
+         let y = startY + cellHeight * 5 + 5
+
+         const colWidths = [usableWidth / 4, usableWidth / 4, usableWidth / 4, usableWidth / 4]
+         doc.rect(startX, startY, usableWidth, cellHeight * 4)
+
+         doc.setFontSize(18)
+         doc.setFont('times', 'italic', 'bold')
+         doc.addImage(imageDataUrl, 'PNG', startX + 2, startY + 1.5, 70, 9)
+         doc.setFont('helvetica', 'bold')
+         doc.setFontSize(11)
+
+         const title = 'SSC CARD TEST REPORT'
+         const titleWidth = doc.getTextWidth(title)
+         doc.text(title, pageWidth - titleWidth - 9, startY + 9)
+
+         //=====================================================
+         y = startY + cellHeight
+
+         const colWidths1 = [80, 30, 40, 54]
+         const labelRowHeight = 6
+         const valueRowHeight = 12
+
+         // ---------- HEADER LABEL ROW 1 ----------
+         const labels1 = ['PRODUCT DESCRIPTION', 'CAT NO.', 'SERIAL NO.', 'MANUFACTURING MM/YY']
+         let x = startX
+         doc.setFontSize(8)
+         doc.setFont('helvetica', 'normal')
+
+         for (let i = 0; i < labels1.length; i++) {
+           doc.rect(x, y, colWidths1[i], labelRowHeight)
+
+           doc.text(labels1[i], x + colWidths1[i] / 2, y + labelRowHeight / 2 + 2, { align: 'center' })
+           x += colWidths1[i]
+         }
+
+         // ---------- HEADER VALUE ROW 1 ----------
+         y += labelRowHeight
+         x = startX
+         const values1 = [product_description, cat_no, serial_no, manufacturing_date]
+         doc.setFont('helvetica', 'bold')
+
+         let descLines = doc.splitTextToSize(values1[0], colWidths1[0] - 4)
+         let descHeight = descLines.length * 5
+         let maxRowHeight = Math.max(descHeight, valueRowHeight)
+
+         for (let i = 0; i < values1.length; i++) {
+           doc.rect(x, y, colWidths1[i], maxRowHeight)
+           if (i === 0) {
+             let textY = y + 5
+             for (let j = 0; j < descLines.length; j++) {
+               doc.text(descLines[j], x + colWidths1[i] / 2, textY, { align: 'center' })
+               textY += 5
+             }
+           } else {
+             doc.text(values1[i], x + colWidths1[i] / 2, y + maxRowHeight / 2 + 3, { align: 'center' })
+           }
+           x += colWidths1[i]
+         }
+
+         // ---------- HEADER LABEL ROW 2 ----------
+         y += maxRowHeight // ✅ Move down by actual height
+         x = startX
+         const labels2 = ['PROJECT NAME', 'PROJECT NO.', 'TESTED BY', 'TESTER SIGNATURE / DATE']
+         doc.setFont('helvetica', 'normal')
+
+         for (let i = 0; i < labels2.length; i++) {
+           doc.rect(x, y, colWidths1[i], labelRowHeight)
+           doc.text(labels2[i], x + colWidths1[i] / 2, y + labelRowHeight / 2 + 2, { align: 'center' })
+           x += colWidths1[i]
+         }
+
+         // ---------- HEADER VALUE ROW 2 ----------
+         y += labelRowHeight
+         x = startX
+         const values2 = [project_name, project_no, customer_name, testedby1]
+         doc.setFont('helvetica', 'bold')
+
+         let descLines2 = doc.splitTextToSize(values2[0], colWidths1[0] - 4)
+         let descHeight2 = descLines2.length * 5
+         let maxRowHeight2 = Math.max(descHeight2, valueRowHeight)
+
+         for (let i = 0; i < values2.length; i++) {
+           doc.rect(x, y, colWidths1[i], maxRowHeight2)
+           if (i === 0) {
+             let textY = y + 5
+             for (let j = 0; j < descLines2.length; j++) {
+               doc.text(descLines2[j], x + colWidths1[i] / 2, textY, { align: 'center' })
+               textY += 5
+             }
+           } else {
+             doc.text(values2[i], x + colWidths1[i] / 2, y + maxRowHeight2 / 2 + 3, { align: 'center' })
+           }
+           x += colWidths1[i]
+         }
+         //====================================================
+
+
+         // === FOOTER ===
+         const footerTop = pageHeight - 41 // adjust for 6 rows
+         const footerCellHeight = 6
+         const footerColWidth = usableWidth / 3
+
+         const footerTitles = ['BILL OF MATERIAL No. / REV No.', 'G.A./Assembly Instruction No. / REV No.', 'TEST INSTRUCTION No. / REV No.']
+
+         const footerSections = ['MANUFACTURING', 'QUALITY CONTROL', 'CUSTOMER INSPECTION']
+         const instructionValues = [bill_of_material, ga_instruction, test_instruction]
+         const approvalValues = [manufacturing, quality_control_review, customer_inspection]
+         const dateValues = [date1, date2, date3]
+
+         //===================
+         for (let row = 0; row < 6; row++) {
+           for (let i = 0; i < 3; i++) {
+             const x = margin + i * footerColWidth
+             const y = footerTop + row * footerCellHeight
+
+             // Skip drawing the rectangle for the last row
+             if (row !== 5) {
+               doc.rect(x, y, footerColWidth, footerCellHeight)
+             }
+
+             doc.setFontSize(7)
+
+             if (row === 0) {
+               doc.setFont('helvetica', 'normal')
+               doc.text(footerTitles[i], x + 2, y + 4)
+             } else if (row === 1) {
+               doc.setFont('helvetica', 'bold')
+               doc.text(instructionValues[i], x + 2, y + 4)
+             } else if (row === 2) {
+               doc.setFont('helvetica', 'normal')
+               doc.text(footerSections[i], x + 2, y + 4)
+             } else if (row === 3) {
+               doc.setFont('helvetica', 'bold')
+               doc.text(approvalValues[i], x + 2, y + 4)
+             } else if (row === 4) {
+               doc.setFont('helvetica', 'normal')
+               doc.text('Date : ' + dateValues[i], x + 2, y + 4)
+             }
+           }
+         }
+         // Page Number
+         doc.setFontSize(7)
+         doc.setFont('helvetica', 'normal')
+         doc.text('Page ' + doc.internal.getCurrentPageInfo().pageNumber, pageWidth - 30, pageHeight - 7)
+         //=============================================================
+       }
+       // doc.save('DI_Test_Jig_Report.pdf')
+       doc.save(`SSC_CARD_${serial_no}.pdf`)
+
+     }
+  </script>

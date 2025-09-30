@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}" />
+  <title>SSC CARD TEST</title>
+  <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+  <script src="{% static 'js/jspdf.umd.min.js' %}"></script>
+  <script src="{% static 'js/jspdf.plugin.autotable.min.js' %}"></script>
+  <script src="{% static 'js/sweetalert.js' %}"></script>
+
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+  <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #cce0f5;
+      padding: 30px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: #e9f6fb;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #003366;
+      font-size: 24px;
+    }
+
+    .btn-group {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      background: #0d6efd;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background: #084298;
+    }
+
+    .btn.active {
+      background: #0c746e !important;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    th {
+      background: #0e708b;
+      color: white;
+      text-align: center;
+      padding: 12px;
+      font-size: 16px;
+    }
+
+    td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    tr:hover {
+      background-color: #f1faff;
+    }
+
+    input[type="text"] {
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .panel {
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 15px;
+      display: none;
+    }
+
+    #normalPanel {
+      background: #eafbea;
+    }
+
+    #loopbackPanel {
+      background: #fff3cd;
+    }
+
+    .pdf-btn {
+      display: block;
+      margin: 15px auto;
+      background: #6f42c1;
+    }
+
+    .status-ok {
+      background: rgb(250, 223, 133);
+      color: rgb(6, 19, 3);
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+
+    .status-notok {
+      background: rgb(235, 140, 140);
+      color: rgb(27, 7, 7);
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+
+
+
+    .run-btn {
+      background: linear-gradient(135deg, #0d6efd, #0a58ca);
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .run-btn:hover {
+      background: linear-gradient(135deg, #084298, #052c65);
+      transform: scale(1.05);
+    }
+
+    .run-btn:active {
+      transform: scale(0.98);
+      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.25) inset;
+    }
+
+
+    .refresh-btn {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .refresh-btn:hover {
+      background: linear-gradient(135deg, #e67e22, #d35400);
+    }
+
+    /* Dropdown style */
+    select {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background-color: #f9f9f9;
+      color: #333;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    select:hover {
+      border-color: #888;
+      background-color: #fff;
+    }
+
+    select:focus {
+      border-color: #4CAF50;
+      box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+    }
+
+    /* Section Header (blue row) */
+    .table-section-header {
+      background: #4dd0e1;
+      color: #edf2f3;
+      text-align: center;
+      font-weight: bold;
+      font-size: 50px;
+      padding: 4px 6px;
+      /* reduce top/bottom spacing */
+      line-height: 1.2;
+    }
+
+    /* Column Headers */
+    .table th {
+      background: #4dd0e1;
+      /* or your desired header color */
+      text-align: center;
+      font-weight: bold;
+      font-size: 17px;
+      padding: 4px 6px;
+      /* reduce padding */
+      line-height: 1.2;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- <input type="hidden" id="product_description" value="{{ main_details.product_description }}" />
+  <input type="hidden" id="cat_no" value="{{ main_details.cat_no }}" />
+  <input type="hidden" id="serial_no" value="{{ main_details.serial_no }}" />
+  <input type="hidden" id="manufacturing_date" value="{{ main_details.manufacturing_date }}" />
+  <input type="hidden" id="project_name" value="{{ main_details.project_name }}" />
+  <input type="hidden" id="project_no" value="{{ main_details.project_no }}" />
+  <input type="hidden" id="customer_name" value="{{ main_details.customer_name }}" />
+  <input type="hidden" id="customer_reference_no" value="{{ main_details.customer_reference_no }}" />
+  <input type="hidden" id="testedby1" value="{{ main_details.testedby1 }}" /> -->
+  <!-- Footer -->
+  <!-- <input type="hidden" id="bill_of_material" value="{{ main_details.bill_of_material }}" />
+  <input type="hidden" id="ga_assembly_instruction" value="{{ main_details.ga_assembly_instruction }}" />
+  <input type="hidden" id="test_instruction" value="{{ main_details.test_instruction }}" />
+  <input type="hidden" id="manufacturing" value="{{ main_details.manufacturing }}" />
+  <input type="hidden" id="date1" value="{{ main_details.date1 }}" />
+  <input type="hidden" id="quality_control_review" value="{{ main_details.quality_control_review }}" />
+  <input type="hidden" id="date2" value="{{ main_details.date2 }}" />
+  <input type="hidden" id="customer_inspection" value="{{ main_details.customer_inspection }}" />
+  <input type="hidden" id="date3" value="{{ main_details.date3 }}" /> -->
+
+
+  <div class="container">
+    <h2>SSC CARD TEST</h2>
+
+    <div class="btn-group">
+      <button id="btnNormal" class="btn" onclick="showPanel('normal')">Normal Test</button>
+      <button id="btnLoopback" class="btn" onclick="showPanel('loopback')">Loopback Test</button>
+      <button onclick="goBack()" class="btn">⬅ Back</button>
+      <button onclick="refreshPage()" class="refresh-btn">🔄 Refresh</button>
+
+      <button class="board" id="btnSSC_Board_DI" type="button" data-bs-toggle="modal" data-bs-target="#SSC_Board_Model"
+        hidden>SSC Card Board Level Test</button>
+      <!-- Checkbox -->
+      <input type="checkbox" class="Check_btn" id="SSC_Check" name="SSC_Check" value="SSC_Check"
+        style="transform: scale(3); margin-left: 25px; margin-right: 25px;" />
+      <label for="SSC_Check">Enable Board Level Test</label>
+
+      <!-- Hidden Button (shows when checkbox is ON) -->
+      <button id="boardLevelBtn" type="button" class="btn btn-primary" data-bs-toggle="modal"
+        data-bs-target="#SSC_Board_Model" style="display:none; margin-left:20px;">
+        Open Board Level Test
+      </button>
+
+
+
+
+    </div>
+    <form id="NormalForm" method="post">
+      {% csrf_token %}
+      <!-- Normal Test Panel -->
+      <div id="normalPanel" class="panel">
+        <div style="text-align:right; margin-bottom:10px;">
+          <button id="btnStart" class="btn">Start Normal Test</button>
+          <button id="btnStop" class="btn">Stop Normal Test</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th class="bg-info text-white text-center fw-bold fs-6 py-1">Channel</th>
+              <th class="bg-info text-white text-center fw-bold fs-6 py-1">Observed Value</th>
+              <th class="bg-info text-white text-center fw-bold fs-6 py-1">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for i in "12345678" %}
+            <tr>
+              <td>Channel {{ i }}</td>
+              <td><input type="text" id="txtReadN{{ i }}" name="txtReadN{{ i }}"></td>
+              <td>
+                <select id="DropdownN{{ i }}" name="DropdownN{{ i }}" onchange="setColor(this)">
+                  <option value="NOT OK">NOT OK</option>
+                  <option value="OK">OK</option>
+                </select>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <button class="btn pdf-btn" onclick="generatePDF_SSC()">Generate Normal Test PDF</button>
+        <input type="submit" id='normalsave' name='normalsave' class="btn pdf-btn" value='normalsave'>
+      </div>
+
+    </form>
+    <!-- Loopback Test Panel -->
+    <div id="loopbackPanel" class="panel">
+      <h2 style="text-align:center;">Loopback Test</h2>
+      <div style="text-align:center; margin-bottom:20px;">
+        <button onclick="fetchLoopbackData()" class="run-btn">▶ Run Loopback Test</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <!-- <th class="bg-info text-white text-center fw-bold fs-6 py-1">Description</th> -->
+            <th class="bg-info text-white text-center fw-bold fs-6 py-1">Channel</th>
+            <th class="bg-info text-white text-center fw-bold fs-6 py-1">Observed Value</th>
+            <th class="bg-info text-white text-center fw-bold fs-6 py-1">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in "12345678" %}
+          <tr>
+            <td>Channel {{ i }}</td>
+            <td><input type="text" id="textboxl{{ i }}" readonly></td>
+            <td><input type="text" id="StatusL{{ i }}" readonly></td>
+            <!-- <td><label id="StatusL{{ i }}"></label></td> -->
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button class="btn pdf-btn" onclick="alert('Loopback Test PDF logic')">Generate Loopback Test PDF</button>
+    </div>
+  </div>
+  <!-- Board Level Test Modal -->
+  <div class="modal fade" id="SSC_Board_Model" tabindex="-1" aria-labelledby="SSC_Board_ModelLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header py-2">
+          <h2 class="modal-title">SSC Card Board Level Test</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body p-3">
+          <h2 class="text-center fw-bold mb-3">TEST RESULT</h2>
+
+          <!-- Power Supply Test -->
+          <div class="mb-3">
+            <table class="table table-bordered table-sm text-center align-middle">
+              <thead class="table-light">
+                <!-- Section Header -->
+                <tr>
+                  <th colspan="3" class="bg-info text-white text-center fw-bold fs-6 py-1">
+                    Power Supply Test
+                  </th>
+                </tr>
+
+                <!-- Column Headers -->
+                <tr>
+                  <th class="bg-info text-white text-center fw-bold fs-6 py-1">Description</th>
+                  <th class="bg-info text-white text-center fw-bold fs-6 py-1">Expected Value</th>
+                  <th class="bg-info text-white text-center fw-bold fs-6 py-1">Observed Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Resistance between 5V VDD and FGND (Diode D4)</td>
+                  <td>≥260 Ω</td>
+                  <td><input type="text" id="R1" class="form-control form-control-sm d-inline" style="width:90px;"> Ω
+                  </td>
+                </tr>
+                <tr>
+                  <td>Resistance between 5V VCC and GND (Diode D2)</td>
+                  <td>≥4K Ω</td>
+                  <td><input type="text" id="R2" class="form-control form-control-sm d-inline" style="width:90px;"> Ω
+                  </td>
+                </tr>
+                <tr>
+                  <td>Resistance between 1.8V VCC and GND (J10 & GND)</td>
+                  <td>≥109 Ω</td>
+                  <td><input type="text" id="R3" class="form-control form-control-sm d-inline" style="width:90px;"> Ω
+                  </td>
+                </tr>
+                <tr>
+                  <td>Resistance between 3.3V VCC and GND (J11 & GND)</td>
+                  <td>≥13K Ω</td>
+                  <td><input type="text" id="R4" class="form-control form-control-sm d-inline" style="width:90px;"> Ω
+                  </td>
+                </tr>
+                <tr>
+                  <td>VME Supply VCC & GND (Zener D2, POWER ON)</td>
+                  <td>5V ± 0.1V</td>
+                  <td><input type="text" id="R5" class="form-control form-control-sm d-inline" style="width:90px;"> V
+                  </td>
+                </tr>
+                <tr>
+                  <td>Field Supply VDD & GND (Zener D4, POWER ON)</td>
+                  <td>5V ± 0.2V</td>
+                  <td><input type="text" id="R6" class="form-control form-control-sm d-inline" style="width:90px;"> V
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Card Status Indicator LED Test -->
+          <div>
+            <table class="table table-bordered table-sm text-center align-middle">
+              <thead class="table-light">
+                <!-- Section Header -->
+                <tr>
+                  <th colspan="3" class="bg-info text-white text-center fw-bold fs-6 py-1">
+                    Card Status Indicator LED Test
+                  </th>
+                </tr>
+
+                <!-- Column Headers -->
+                <tr>
+                  <th class="bg-info text-white text-center fw-bold fs-6 py-1">LED (Facia)</th>
+                  <th class="bg-info text-white text-center fw-bold fs-6 py-1">Built-in Test Mode</th>
+                  <th class="bg-info text-white text-center fw-bold fs-6 py-1">Observation during test mode<br>(OK / Not OK)</th>
+                </tr>
+
+
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1. VCC</td>
+                  <td>5VDC VME Supply OK (P1 Connector)</td>
+                  <td>
+                    <select id="R7" class="form-select form-select-sm">
+                      <option value="OK">OK</option>
+                      <option value="NOT-OK">NOT OK</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2. VDD</td>
+                  <td>5VDC Field Supply OK (P2 Connector)</td>
+                  <td>
+                    <select id="R8" class="form-select form-select-sm">
+                      <option value="OK">OK</option>
+                      <option value="NOT-OK">NOT OK</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>3. STS</td>
+                  <td>Blinking</td>
+                  <td>
+                    <select id="R9" class="form-select form-select-sm">
+                      <option value="OK">OK</option>
+                      <option value="NOT-OK">NOT OK</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>4. LED1</td>
+                  <td>Blinking</td>
+                  <td>
+                    <select id="R10" class="form-select form-select-sm">
+                      <option value="OK">OK</option>
+                      <option value="NOT-OK">NOT OK</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>5. LED2</td>
+                  <td>Blinking</td>
+                  <td>
+                    <select id="R11" class="form-select form-select-sm">
+                      <option value="OK">OK</option>
+                      <option value="NOT-OK">NOT OK</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>6. LED3</td>
+                  <td>Blinking</td>
+                  <td>
+                    <select id="R12" class="form-select form-select-sm">
+                      <option value="OK">OK</option>
+                      <option value="NOT-OK">NOT OK</option>
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Hidden Inputs -->
+          <div id="SSC_tempValues" style="display:none;">
+            <input type="hidden" id="H_R1" name="R1">
+            <input type="hidden" id="H_R2" name="R2">
+            <input type="hidden" id="H_R3" name="R3">
+            <input type="hidden" id="H_R4" name="R4">
+            <input type="hidden" id="H_R5" name="R5">
+            <input type="hidden" id="H_R6" name="R6">
+            <input type="hidden" id="H_R7" name="R7">
+            <input type="hidden" id="H_R8" name="R8">
+            <input type="hidden" id="H_R9" name="R9">
+            <input type="hidden" id="H_R10" name="R10">
+            <input type="hidden" id="H_R11" name="R11">
+            <input type="hidden" id="H_R12" name="R12">
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer py-2">
+          <button type="button" id="SSC_saveInputs" class="btn btn-primary btn-sm">Save</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkbox & Button -->
+  <input type="checkbox" id="SSC_Check" style="transform: scale(1.5); margin:10px;">
+  <button id="boardLevelBtn" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#SSC_Board_Model"
+    style="display:none;">
+    Board Level Test
+  </button>
+
+  <script>
+    // Show/Hide button when checkbox toggled
+    document.getElementById("SSC_Check").addEventListener("change", function () {
+      const btn = document.getElementById("boardLevelBtn");
+      btn.style.display = this.checked ? "inline-block" : "none";
+    });
+  </script>
+
+  <script>
+    async function generatePDF_SSC() {
+      // HEADER values
+      const imageUrl = "{% static 'Images/LnT_Logo1.png' %}"
+      const product_description = ""//document.getElementById('product_description')?.value || ''
+      const cat_no = '' //document.getElementById('cat_no')?.value || ''
+      const serial_no = ''//document.getElementById('serial_no')?.value || ''
+      const manufacturing_date = ''//document.getElementById('manufacturing_date')?.value || ''
+      const project_name = ''//document.getElementById('project_name')?.value || ''
+      const project_no = ''//document.getElementById('project_no')?.value || ''
+      const customer_name = ''//document.getElementById('customer_name')?.value || ''
+      const customer_reference_no = ''// document.getElementById('customer_reference_no')?.value || ''
+      const testedby1 = ''//document.getElementById('testedby1')?.value || ''
+
+      // FOOTER values
+      const bill_of_material = ''//document.getElementById('bill_of_material')?.value || ''
+      const ga_instruction = ''//document.getElementById('ga_assembly_instruction')?.value || ''
+      const test_instruction = ''//document.getElementById('test_instruction')?.value || ''
+
+      const manufacturing = ''//document.getElementById('manufacturing')?.value || ''
+      const date1 = ''//document.getElementById('date1')?.value || ''
+      const quality_control_review = ''//document.getElementById('quality_control_review')?.value || ''
+      const date2 = ''//document.getElementById('date2')?.value || ''
+      const customer_inspection = ''//document.getElementById('customer_inspection')?.value || ''
+      const date3 = ''//document.getElementById('date3')?.value || ''
+      const { jsPDF } = window.jspdf
+      const doc = new jsPDF()
+
+      debugger
+
+      const margin = 3
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const pageHeight = doc.internal.pageSize.getHeight()
+      const usableWidth = pageWidth - 2 * margin
+
+      doc.rect(margin, margin, usableWidth, pageHeight - 2 * margin)
+
+      let startX = margin
+      let startY = margin
+      let cellHeight = 12
+      let y = startY + cellHeight * 5 + 5
+
+      const imageDataUrl = await fetch(imageUrl)
+        .then((response) => response.blob())
+        .then(
+          (blob) =>
+            new Promise((resolve, reject) => {
+              const reader = new FileReader()
+              reader.onloadend = () => resolve(reader.result)
+              reader.onerror = reject
+              reader.readAsDataURL(blob)
+            })
+        )
+
+      const colWidths = [usableWidth / 4, usableWidth / 4, usableWidth / 4, usableWidth / 4]
+
+      doc.rect(startX, startY, usableWidth, cellHeight * 4)
+
+      doc.setFontSize(18)
+      doc.setFont('times', 'italic', 'bold')
+      doc.addImage(imageDataUrl, 'PNG', startX + 2, startY + 1.5, 70, 9)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(11)
+
+      const title = 'SSC CARD TEST REPORT'
+      const titleWidth = doc.getTextWidth(title)
+      doc.text(title, pageWidth - titleWidth - 9, startY + 9)
+
+      addPageHeaderFooterDI(doc)
+      // // //================================================================================
+
+     
+     // === TEST RESULT ===
+
+      y -= 12 // Add spacing after previous table
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'bold')
+      doc.text('1-   TEST RESULT ', margin + 6, y)
+
+     // === Power_Supply_Test ===
+      y += 5
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(10)
+      doc.text('1.1-   Power Supply Test', margin + 6, y)
+
+      y -= 2
+      doc.setLineWidth(0.2); // Optional: make line thicker
+      doc.line(8, 67, 197, 67); // From x=4 to x=206 at y=62
+      doc.line(8, 71, 197, 71);
+      doc.line(8, 90, 197, 90);
+
+      // Vertical lines (4 total)
+      doc.line(8, 67, 8, 90);
+      doc.line(55, 67, 55, 90);
+      doc.line(105, 67, 105, 90);
+      doc.line(155, 67, 155, 90);
+      doc.line(197, 67, 197, 90);
+
+
+      y += 6
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+
+      // Row 1
+      doc.text('Description', margin + 15, y)
+      doc.text('Expected Value', margin + 65, y)
+      doc.text('Observed Value:', pageWidth - margin - 40, y)
+
+      y += 4
+
+      const Power_Supply_Test = [
+        { no: '1.', measured: 'Resistance between 5V VDD and FGND (across Diode D4)', passval: '>=260 Ohm', id: 'R1' },
+        { no: '2.', measured: 'Resistance between 5V VCC and GND (across Diode D2)', passval: '>= 4K Ohm', id: 'R2' },
+        { no: '3.', measured: 'Resistance between 1.8V VCC and GND (across Jumper J10 & GND)', passval: '>=1.3K Ohm', id: 'R3' },
+        { no: '4.', measured: 'Resistance between 3.3V VCC and GND (across Jumper J11 & GND)', passval: '>= 109 Ohm', id: 'R4' },
+        { no: '5.', measured: 'Resistance between 2.5V VCC and GND (across Jumper J4 & GND)', passval: '>= 13K Ohm', id: 'R5' },
+        { no: '6.', measured: 'VME Supply VCC & GND (across Zener Diode D2 after POWER ON)', passval: '5V ± 0.1V', id: 'R6' },
+        { no: '7.', measured: 'Filed Supply VDD & GND (across Zener Diode D4 after POWER ON)', passval: '5V ± 0.2V', id: 'R7' },
+      ]
+
+      Power_Supply_Test.forEach((item) => {
+        // const val = document.getElementById(item.id)?.value || ''
+        // const pval = document.getElementById(item.passval)?.value || ''
+        doc.setFont('helvetica', 'normal')
+        doc.text(`${item.no} ${item.measured}:`, margin + 8, y)
+        doc.text(item.passval, margin + 115, y)
+        doc.setFont('helvetica', 'bold')
+        doc.text(item.id, pageWidth - margin - 25, y, { align: 'right' })
+        y += 5
+      })
+
+      // === Power_Supply_Test ===
+
+      y += 0
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.text('VME TEST', margin + 6, y)
+      y += 4
+
+      doc.setLineWidth(0.2); // Optional: make line thicker
+      doc.line(8, 95, 197, 95); // From x=4 to x=206 at y=62
+      doc.line(8, 99, 197, 99);
+      doc.line(8, 119, 197, 119);
+
+      // Vertical lines (4 total)
+      doc.line(8, 95, 8, 119);
+      doc.line(55, 95, 55, 119);
+      doc.line(105, 95, 105, 119);
+      doc.line(155, 95, 155, 119);
+      doc.line(197, 95, 197, 119);
+
+
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+      doc.text('VME Read', margin + 9, y)
+      doc.text('Value', margin + 115, y)
+      doc.text('Observation (OK/ Not OK)', pageWidth - margin - 40, y)
+      y += 5
+
+      const pmicData = [
+        { no: '1.', measured: 'Board ID ', id: 'OK' }
+      ]
+
+      pmicData.forEach((item) => {
+        // const val = document.getElementById(item.id)?.value || ''
+        // const pval = document.getElementById(item.passval)?.value || ''
+        doc.setFont('helvetica', 'normal')
+        doc.text(`${item.no} ${item.measured}:`, margin + 9, y)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`OK`, pageWidth - margin - 25, y, { align: 'right' })
+        y += 5
+      })
+
+
+      // === FIELD Power  ===
+
+      y += 0
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.text('5.3- CARD STATUS INDICATOR LED TEST ', margin + 6, y)
+      y += 4
+
+      doc.setLineWidth(0.2); // Optional: make line thicker
+      doc.line(8, 124, 197, 124); // From x=4 to x=206 at y=62
+      doc.line(8, 128, 197, 128);
+      doc.line(8, 149, 197, 149);
+
+      // Vertical lines (4 total)
+      doc.line(8, 124, 8, 149);
+      doc.line(55, 124, 55, 149);
+      doc.line(105, 124, 105, 149);
+      doc.line(155, 124, 155, 149);
+      doc.line(197, 124, 197, 149);
+
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+      doc.text('LED (Facia)', margin + 9, y)
+      doc.text('Built-in Test Mode', margin + 115, y)
+      doc.text('With respect to:', margin + 65, y)
+      doc.text('Observation during test mode (OK/ Not OK)', pageWidth - margin - 40, y)
+      y += 5
+
+      const pmicData2 = [
+        { no: '1.', measured: 'VCC', passval: '5VDC VME Supply OK (P1 Connector)', id: 'R9' },
+        { no: '2.', measured: 'VDD', passval: '5VDC Field Supply OK (P2 Connector)', id: 'R10' },
+        { no: '3.', measured: 'STS', passval: 'Blinking', id: 'R11' },
+        { no: '4.', measured: 'LED1', passval: 'Blinking', id: 'R12' },
+        { no: '5.', measured: 'LED2', passval: 'Blinking', id: 'R13' },
+        { no: '6.', measured: 'LED1', passval: 'Blinking', id: 'R14' }
+      ]
+
+      pmicData2.forEach((item) => {
+        const val = document.getElementById(item.id)?.value || ''
+        const pval = document.getElementById(item.passval)?.value || ''
+        doc.setFont('helvetica', 'normal')
+        doc.text(`${item.no} ${item.measured}:`, margin + 9, y)
+        doc.text(`${pval}`, margin + 115, y)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${val} Ohm`, pageWidth - margin - 25, y, { align: 'right' })
+        y += 5
+      })
+      // Add a new page for table
+      doc.addPage()
+      addPageHeaderFooterDI(doc)
+      function addPageHeaderFooterDI(doc) {
+        const margin = 3
+        const pageWidth = doc.internal.pageSize.getWidth()
+        const pageHeight = doc.internal.pageSize.getHeight()
+        const usableWidth = pageWidth - 2 * margin
+
+        doc.rect(margin, margin, usableWidth, pageHeight - 2 * margin)
+
+        let startX = margin
+        let startY = margin
+        let cellHeight = 12
+        let y = startY + cellHeight * 5 + 5
+
+        const colWidths = [usableWidth / 4, usableWidth / 4, usableWidth / 4, usableWidth / 4]
+        doc.rect(startX, startY, usableWidth, cellHeight * 4)
+
+        doc.setFontSize(18)
+        doc.setFont('times', 'italic', 'bold')
+        doc.addImage(imageDataUrl, 'PNG', startX + 2, startY + 1.5, 70, 9)
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(11)
+
+        const title = 'SSC CARD TEST REPORT'
+        const titleWidth = doc.getTextWidth(title)
+        doc.text(title, pageWidth - titleWidth - 9, startY + 9)
+
+        //=====================================================
+        y = startY + cellHeight
+
+        const colWidths1 = [80, 30, 40, 54]
+        const labelRowHeight = 6
+        const valueRowHeight = 12
+
+        // ---------- HEADER LABEL ROW 1 ----------
+        const labels1 = ['PRODUCT DESCRIPTION', 'CAT NO.', 'SERIAL NO.', 'MANUFACTURING MM/YY']
+        let x = startX
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'normal')
+
+        for (let i = 0; i < labels1.length; i++) {
+          doc.rect(x, y, colWidths1[i], labelRowHeight)
+
+          doc.text(labels1[i], x + colWidths1[i] / 2, y + labelRowHeight / 2 + 2, { align: 'center' })
+          x += colWidths1[i]
+        }
+
+        // ---------- HEADER VALUE ROW 1 ----------
+        y += labelRowHeight
+        x = startX
+        const values1 = [product_description, cat_no, serial_no, manufacturing_date]
+        doc.setFont('helvetica', 'bold')
+
+        let descLines = doc.splitTextToSize(values1[0], colWidths1[0] - 4)
+        let descHeight = descLines.length * 5
+        let maxRowHeight = Math.max(descHeight, valueRowHeight)
+
+        for (let i = 0; i < values1.length; i++) {
+          doc.rect(x, y, colWidths1[i], maxRowHeight)
+          if (i === 0) {
+            let textY = y + 5
+            for (let j = 0; j < descLines.length; j++) {
+              doc.text(descLines[j], x + colWidths1[i] / 2, textY, { align: 'center' })
+              textY += 5
+            }
+          } else {
+            doc.text(values1[i], x + colWidths1[i] / 2, y + maxRowHeight / 2 + 3, { align: 'center' })
+          }
+          x += colWidths1[i]
+        }
+
+        // ---------- HEADER LABEL ROW 2 ----------
+        y += maxRowHeight // ✅ Move down by actual height
+        x = startX
+        const labels2 = ['PROJECT NAME', 'PROJECT NO.', 'TESTED BY', 'TESTER SIGNATURE / DATE']
+        doc.setFont('helvetica', 'normal')
+
+        for (let i = 0; i < labels2.length; i++) {
+          doc.rect(x, y, colWidths1[i], labelRowHeight)
+          doc.text(labels2[i], x + colWidths1[i] / 2, y + labelRowHeight / 2 + 2, { align: 'center' })
+          x += colWidths1[i]
+        }
+
+        // ---------- HEADER VALUE ROW 2 ----------
+        y += labelRowHeight
+        x = startX
+        const values2 = [project_name, project_no, customer_name, testedby1]
+        doc.setFont('helvetica', 'bold')
+
+        let descLines2 = doc.splitTextToSize(values2[0], colWidths1[0] - 4)
+        let descHeight2 = descLines2.length * 5
+        let maxRowHeight2 = Math.max(descHeight2, valueRowHeight)
+
+        for (let i = 0; i < values2.length; i++) {
+          doc.rect(x, y, colWidths1[i], maxRowHeight2)
+          if (i === 0) {
+            let textY = y + 5
+            for (let j = 0; j < descLines2.length; j++) {
+              doc.text(descLines2[j], x + colWidths1[i] / 2, textY, { align: 'center' })
+              textY += 5
+            }
+          } else {
+            doc.text(values2[i], x + colWidths1[i] / 2, y + maxRowHeight2 / 2 + 3, { align: 'center' })
+          }
+          x += colWidths1[i]
+        }
+        //====================================================
+
+
+        // === FOOTER ===
+        const footerTop = pageHeight - 41 // adjust for 6 rows
+        const footerCellHeight = 6
+        const footerColWidth = usableWidth / 3
+
+        const footerTitles = ['BILL OF MATERIAL No. / REV No.', 'G.A./Assembly Instruction No. / REV No.', 'TEST INSTRUCTION No. / REV No.']
+
+        const footerSections = ['MANUFACTURING', 'QUALITY CONTROL', 'CUSTOMER INSPECTION']
+        const instructionValues = [bill_of_material, ga_instruction, test_instruction]
+        const approvalValues = [manufacturing, quality_control_review, customer_inspection]
+        const dateValues = [date1, date2, date3]
+
+        //===================
+        for (let row = 0; row < 6; row++) {
+          for (let i = 0; i < 3; i++) {
+            const x = margin + i * footerColWidth
+            const y = footerTop + row * footerCellHeight
+
+            // Skip drawing the rectangle for the last row
+            if (row !== 5) {
+              doc.rect(x, y, footerColWidth, footerCellHeight)
+            }
+
+            doc.setFontSize(7)
+
+            if (row === 0) {
+              doc.setFont('helvetica', 'normal')
+              doc.text(footerTitles[i], x + 2, y + 4)
+            } else if (row === 1) {
+              doc.setFont('helvetica', 'bold')
+              doc.text(instructionValues[i], x + 2, y + 4)
+            } else if (row === 2) {
+              doc.setFont('helvetica', 'normal')
+              doc.text(footerSections[i], x + 2, y + 4)
+            } else if (row === 3) {
+              doc.setFont('helvetica', 'bold')
+              doc.text(approvalValues[i], x + 2, y + 4)
+            } else if (row === 4) {
+              doc.setFont('helvetica', 'normal')
+              doc.text('Date : ' + dateValues[i], x + 2, y + 4)
+            }
+          }
+        }
+        // Page Number
+        doc.setFontSize(7)
+        doc.setFont('helvetica', 'normal')
+        doc.text('Page ' + doc.internal.getCurrentPageInfo().pageNumber, pageWidth - 30, pageHeight - 7)
+        //=============================================================
+      }
+      // doc.save('DI_Test_Jig_Report.pdf')
+      doc.save(`SSC_CARD_${serial_no}.pdf`)
+
+    }
+  </script>
+
+  <script>
+    // Panel Switching
+
+    function showPanel(type) {
+      if (type === "normal" && confirm("Ensure hardware is connected for Normal Test. Continue?")) {
+        setActive("btnNormal", "normalPanel");
+        document.getElementById("btnLoopback").style.display = "none";
+      }
+      if (type === "loopback" && confirm("Ensure hardware is connected for Loopback Test. Continue?")) {
+        setActive("btnLoopback", "loopbackPanel");
+        document.getElementById("btnNormal").style.display = "none";
+        // ❌ don't call fetchLoopbackData() here
+      }
+    }
+
+    function setActive(btnId, panelId) {
+      document.getElementById("btnNormal").classList.remove("active");
+      document.getElementById("btnLoopback").classList.remove("active");
+      document.getElementById(btnId).classList.add("active");
+      document.getElementById("normalPanel").style.display = "none";
+      document.getElementById("loopbackPanel").style.display = "none";
+      document.getElementById(panelId).style.display = "block";
+    }
+    function refreshPage() {
+      location.reload();
+    }
+    function goBack() {
+      window.location.href = "{% url 'LnT_Main_Details' %}";
+    }
+    function setColor(sel) {
+      if (sel.value === "OK") {
+        sel.style.background = "linear-gradient(135deg, #f39c12, #e67e22)"; // orange gradient
+        sel.style.color = "white";
+      } else {
+        sel.style.background = "#FF7F7F"; // light reddish
+        sel.style.color = "black";
+      }
+    }
+
+    // Run on page load for initial selection
+    window.addEventListener('DOMContentLoaded', () => {
+      const dropdown = document.getElementById('status');
+      setColor(dropdown);
+    });
+
+    // Normal Test Auto-Read
+    let intervalId = null;
+    function fetchChannelData(ch) {
+      fetch(`/get_ReadN${ch}_id/`)
+        .then(r => r.json())
+        .then(d => document.getElementById(`txtReadN${ch}`).value = d[`ReadN${ch}_id_dec`] || "Error")
+        .catch(() => document.getElementById(`txtReadN${ch}`).value = "Error");
+    }
+    function startAutoRead() {
+      if (!intervalId) intervalId = setInterval(() => { for (let i = 1; i <= 8; i++) fetchChannelData(i); }, 1000);
+    }
+    function stopAutoRead() { clearInterval(intervalId); intervalId = null; }
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("btnStart").onclick = startAutoRead;
+      document.getElementById("btnStop").onclick = stopAutoRead;
+    });
+
+
+    function fetchLoopbackData() {
+      fetch("/get_Loopback_Test/")
+        .then(r => r.json())
+        .then(d => {
+          console.log("Response from backend:", d);  // DEBUG
+
+          let binStr = d.RightByte_Binary || "";
+          let reversed = binStr.split("").reverse().join("");  // flip order
+
+          for (let i = 0; i < reversed.length; i++) {
+            let textbox = document.getElementById("textboxl" + (i + 1));
+            if (textbox) {
+              textbox.value = reversed[i];
+            }
+            let status = document.getElementById("StatusL" + (i + 1));
+            if (status) {
+              if (reversed[i] === "0") {
+                status.textContent = "OK";
+                status.className = "status-ok";
+              } else {
+                status.textContent = "NOT OK";
+                status.className = "status-notok";
+              }
+            }
+          }
+        })
+        .catch(err => console.error("Fetch error:", err));
+    }
+
+    function refreshPage() {
+      // Clear all textboxes and statuses in Normal Test
+      for (let i = 1; i <= 8; i++) {
+        let tb = document.getElementById("textboxn" + i);
+        let st = document.getElementById("StatusN" + i);
+        if (tb) tb.value = "";
+        if (st) { st.textContent = ""; st.className = ""; }
+      }
+
+      // Clear all textboxes and statuses in Loopback Test
+      for (let i = 1; i <= 8; i++) {
+        let tb = document.getElementById("textboxl" + i);
+        let st = document.getElementById("StatusL" + i);
+        if (tb) tb.value = "";
+        if (st) { st.textContent = ""; st.className = ""; }
+      }
+
+      // Hide both panels
+      document.getElementById("normalPanel").classList.remove("active");
+      document.getElementById("loopbackPanel").classList.remove("active");
+
+      // Show both buttons again
+      document.getElementById("btnNormal").style.display = "inline-block";
+      document.getElementById("btnLoopback").style.display = "inline-block";
+    }
+
+
+  </script>
+</body>
+
+</html>
